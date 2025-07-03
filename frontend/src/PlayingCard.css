@@ -1,0 +1,77 @@
+.playing-card {
+  width: 3.5vw;
+  height: 5vw;
+  background: #181c1b;
+  border-radius: 0.5vw;
+  border: 2px solid #333;
+  box-shadow: 0 2px 8px #000a;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  font-size: 1.2vw;
+  transition: transform 0.3s;
+  perspective: 600px;
+  overflow: hidden;
+  margin: 0 0.2vw;
+}
+.playing-card .corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 0.95em;
+  font-weight: bold;
+  z-index: 2;
+}
+.playing-card .top-left {
+  top: 0.3vw;
+  left: 0.4vw;
+  align-items: flex-start;
+}
+.playing-card .bottom-right {
+  bottom: 0.3vw;
+  right: 0.4vw;
+  align-items: flex-end;
+  transform: rotate(180deg);
+}
+.playing-card .card-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 2vw;
+  font-weight: bold;
+  transform: translate(-50%, -50%);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.playing-card .card-value {
+  font-size: 1em;
+  font-weight: bold;
+  line-height: 1;
+}
+.playing-card .card-suit {
+  font-size: 1.1em;
+  margin-top: -2px;
+}
+.playing-card.back {
+  background: repeating-linear-gradient(135deg, #232b23 0 10px, #2e7d32 10px 20px);
+  border: 2px solid #2e7d32;
+  box-shadow: 0 2px 8px #000a;
+  position: relative;
+}
+.card-back-inner {
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(45deg, #232b23 0 8px, #2e7d32 8px 16px);
+  border-radius: 8px;
+  opacity: 0.7;
+}
+.playing-card.flipped, .playing-card.back.flipped {
+  animation: card-flip 0.5s;
+}
+@keyframes card-flip {
+  0% { transform: rotateY(90deg) scale(0.9); }
+  100% { transform: rotateY(0deg) scale(1); }
+} 
