@@ -42,4 +42,5 @@ export interface GameState {
   phase: GamePhase;
   canDoubleDown?: boolean;
   splitHands?: Hand[];
+  canSplit?: boolean;
 } 

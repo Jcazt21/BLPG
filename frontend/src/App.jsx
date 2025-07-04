@@ -4,13 +4,14 @@ import PlayingCard from './PlayingCard'
 import './PlayingCard.css'
 import logo from './assets/logo.png'
 
-const API_URL = 'http://localhost:5185/game'
+const API_URL = 'http://172.16.50.34:5185/game'
 const START_BALANCE = 1000
 const CHIP_VALUES = [25, 50, 100, 250, 500, 1000]
 
 function App() {
   const [playerName, setPlayerName] = useState('')
   const [gameState, setGameState] = useState(null)
+  const [sessionId, setSessionId] = useState(null)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
   const [winCount, setWinCount] = useState(0)
@@ -29,8 +30,10 @@ function App() {
   const [noChipsMsg, setNoChipsMsg] = useState('')
 
   // Helper to call backend
-  const callApi = async (endpoint, method = 'POST', body) => {
+  const callApi = async (endpoint, method = 'POST', body = {}) => {
     setError('')
+    // Always include sessionId if available and not already present
+    if (sessionId && !body.sessionId) body.sessionId = sessionId;
     try {
       const res = await fetch(`${API_URL}${endpoint}`, {
         method,
@@ -39,18 +42,24 @@ function App() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Unknown error')
-      setGameState(data)
-      setStatus(data.status || 'playing')
-      // Use backend's returned balance and bet
-      if (data.player) {
-        setBalance(data.player.balance)
-        setBet(data.player.bet)
-      }
-      // Count wins
-      if (endpoint === '/stand' || endpoint === '/hit') {
-        if (data.status === 'win') {
-          setWinCount((w) => w + 1)
+      // If this is the /start response, set sessionId and gameState
+      if (endpoint === '/start' && data.sessionId) {
+        setSessionId(data.sessionId)
+        setGameState(data.gameState)
+        setStatus(data.gameState.status || 'playing')
+        if (data.gameState.player) {
+          setBalance(data.gameState.player.balance)
+          setBet(data.gameState.player.bet)
         }
+        return data.gameState
+      } else {
+        setGameState(data)
+        setStatus(data.status || 'playing')
+        if (data.player) {
+          setBalance(data.player.balance)
+          setBet(data.player.bet)
+        }
+        return data
       }
     } catch (err) {
       setError(err.message)
@@ -253,24 +262,14 @@ function App() {
               <img src={logo} alt="Logo" className="logo" />
               <div className="dealer-label">Dealer</div>
               <div className="hand-row dealer-cards">
-                {Array.isArray(gameState?.dealer?.hands) &&
-                  gameState.dealer.hands.length > 0 &&
-                  Array.isArray(gameState.dealer.hands[0]?.cards) &&
-                  gameState.dealer.hands[0].cards.length > 0
-                    ? gameState.dealer.hands[0].cards.map((card, idx) => renderCard(card, idx, true))
-                    : Array.isArray(gameState?.dealer?.hand?.cards) &&
-                      gameState.dealer.hand.cards.length > 0 &&
-                      gameState.dealer.hand.cards.map((card, idx) => renderCard(card, idx, true))
+                {Array.isArray(gameState?.dealer?.hand?.cards) &&
+                  gameState.dealer.hand.cards.length > 0 &&
+                  gameState.dealer.hand.cards.map((card, idx) => renderCard(card, idx, true))
                 }
               </div>
-              {Array.isArray(gameState?.dealer?.hands) &&
-                gameState.dealer.hands.length > 0 &&
-                typeof gameState.dealer.hands[0].total !== 'undefined' ? (
-                  <div className="hand-total">Total: {gameState.dealer.hands[0].total}</div>
-                ) : gameState?.dealer?.hand?.total !== undefined ? (
-                  <div className="hand-total">Total: {gameState.dealer.hand.total}</div>
-                ) : null
-              }
+              {gameState?.dealer?.hand?.total !== undefined ? (
+                <div className="hand-total">Total: {gameState.dealer.hand.total}</div>
+              ) : null}
               <div className="vs-separator">VS</div>
               <div className="player-label">{Array.isArray(gameState?.player?.hands) && gameState.player.hands.length > 0 && gameState.player.name}</div>
               <div className="hand-row player-cards">

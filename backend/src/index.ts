@@ -9,6 +9,6 @@ app.use(cors());
 app.use(express.json());
 app.use('/game', gameRoutes);
 
-app.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`Server running on http://0.0.0.0:${PORT}`);
+app.listen(Number(PORT), '172.16.50.34', () => {
+  console.log(`Server running on http://172.16.50.34:${PORT}`);
 }); 
