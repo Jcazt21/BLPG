@@ -164,7 +164,7 @@ class GameService {
     payout = Math.floor(this.gameState.player.bet * multiplier);
     this.gameState.player.balance += payout;
     this.gameState.status = result;
-    this.gameState.phase = 'betting';
+    this.gameState.phase = 'result';
     this.gameState.canDoubleDown = false;
     // Reset bet to 0 after round
     this.gameState.player.bet = 0;

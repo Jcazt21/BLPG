@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import PlayingCard from './PlayingCard'
 import './PlayingCard.css'
+import logo from './assets/logo.png'
 
-const API_URL = 'http://172.16.50.34:5185/game'
+const API_URL = 'http://localhost:5185/game'
 const START_BALANCE = 1000
 const CHIP_VALUES = [25, 50, 100, 250, 500, 1000]
 
@@ -226,6 +227,7 @@ function App() {
         <div className="center-panel">
           {!nameSaved ? (
             <div className="name-modal">
+              <img src={logo} alt="Logo" className="logo logo-large" />
               <input
                 className="player-input"
                 type="text"
@@ -248,7 +250,7 @@ function App() {
             </div>
           ) : (
             <>
-              <div className="logo">logo</div>
+              <img src={logo} alt="Logo" className="logo" />
               <div className="dealer-label">Dealer</div>
               <div className="hand-row dealer-cards">
                 {Array.isArray(gameState?.dealer?.hands) &&
