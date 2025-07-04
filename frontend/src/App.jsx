@@ -4,7 +4,7 @@ import PlayingCard from './PlayingCard'
 import './PlayingCard.css'
 import logo from './assets/logo.png'
 
-const API_URL = 'http://172.16.50.34:5185/game'
+const API_URL = import.meta.env.VITE_API_URL;
 const START_BALANCE = 1000
 const CHIP_VALUES = [25, 50, 100, 250, 500, 1000]
 
