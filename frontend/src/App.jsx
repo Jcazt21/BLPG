@@ -3,15 +3,19 @@ import './App.css'
 import PlayingCard from './PlayingCard'
 import './PlayingCard.css'
 import logo from './assets/logo.png'
-// import { io } from 'socket.io-client';
+import { io } from 'socket.io-client';
 // const socket = io(import.meta.env.VITE_API_URL, { autoConnect: false });
 // Para activar multiplayer, descomenta y usa socket.connect(), socket.on(), etc.
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5185/game';
+const WS_URL = API_URL.replace(/\/game$/, '');
+const socket = io(WS_URL, { autoConnect: false });
+
 const START_BALANCE = 1000
 const CHIP_VALUES = [25, 50, 100, 250, 500, 1000]
 
 function App() {
+  const [mode, setMode] = useState(null); // 'solo' | 'multi'
   const [playerName, setPlayerName] = useState('')
   const [gameState, setGameState] = useState(null)
   const [sessionId, setSessionId] = useState(null)
@@ -31,6 +35,63 @@ function App() {
   const [activeHand, setActiveHand] = useState(0)
   const [splitHands, setSplitHands] = useState([])
   const [noChipsMsg, setNoChipsMsg] = useState('')
+  const [roomCode, setRoomCode] = useState('')
+  const [joinedRoom, setJoinedRoom] = useState(null)
+  const [roomInput, setRoomInput] = useState('')
+  const [roomError, setRoomError] = useState('')
+  const [players, setPlayers] = useState([])
+  const [isCreator, setIsCreator] = useState(false)
+  const [multiGameState, setMultiGameState] = useState(null)
+  const [socketId, setSocketId] = useState(null)
+
+  useEffect(() => {
+    if (mode === 'multi') {
+      socket.connect();
+      socket.on('connect', () => {
+        setSocketId(socket.id);
+        console.log('Socket.IO conectado:', socket.id);
+      });
+      socket.on('disconnect', () => {
+        setSocketId(null);
+        console.log('Socket.IO desconectado');
+      });
+      socket.on('roomCreated', code => {
+        setRoomCode(code);
+        setJoinedRoom(code);
+        setRoomError('');
+        setIsCreator(true);
+      });
+      socket.on('roomJoined', code => {
+        setJoinedRoom(code);
+        setRoomError('');
+        setIsCreator(false);
+      });
+      socket.on('roomError', msg => {
+        setRoomError(msg);
+      });
+      socket.on('playersUpdate', players => {
+        setPlayers(players);
+      });
+      socket.on('gameStarted', state => {
+        setMultiGameState(state);
+        setStatus('multi-started');
+      });
+      socket.on('gameStateUpdate', state => {
+        setMultiGameState(state);
+      });
+      return () => {
+        socket.off('connect');
+        socket.off('disconnect');
+        socket.off('roomCreated');
+        socket.off('roomJoined');
+        socket.off('roomError');
+        socket.off('playersUpdate');
+        socket.off('gameStarted');
+        socket.off('gameStateUpdate');
+        socket.disconnect();
+      };
+    }
+  }, [mode]);
 
   // Helper to call backend
   const callApi = async (endpoint, method = 'POST', body = {}) => {
@@ -226,6 +287,201 @@ function App() {
     gameState.player.balance >= gameState.player.bet &&
     phase === 'player-turn'
   );
+
+  if (!mode) {
+    return (
+      <div className="mode-select-modal">
+        <img src={logo} alt="Logo" className="logo logo-large" />
+        <h2>¿Cómo quieres jugar?</h2>
+        <button className="mode-btn" onClick={() => setMode('solo')}>Solo</button>
+        <button className="mode-btn" onClick={() => setMode('multi')}>Multiplayer</button>
+      </div>
+    );
+  }
+
+  if (mode === 'multi') {
+    if (!joinedRoom) {
+      return (
+        <div className="main-layout">
+          <div className="center-panel">
+            <img src={logo} alt="Logo" className="logo" />
+            <h2>Modo Multiplayer</h2>
+            <input
+              className="player-input"
+              type="text"
+              placeholder="Tu nombre"
+              value={playerName}
+              onChange={e => setPlayerName(e.target.value)}
+              maxLength={20}
+              style={{ marginBottom: '1em' }}
+            />
+            <div style={{ margin: '1em 0' }}>
+              <button className="mode-btn" onClick={() => {
+                if (!playerName.trim()) {
+                  setRoomError('Ingresa tu nombre');
+                  return;
+                }
+                socket.emit('createRoom', playerName.trim());
+              }}>Crear sala</button>
+            </div>
+            <div style={{ margin: '1em 0' }}>
+              <input
+                className="player-input"
+                type="text"
+                placeholder="Código de sala"
+                value={roomInput}
+                onChange={e => setRoomInput(e.target.value.toUpperCase())}
+                maxLength={6}
+                style={{ textTransform: 'uppercase' }}
+              />
+              <button className="mode-btn" onClick={() => {
+                if (!playerName.trim()) {
+                  setRoomError('Ingresa tu nombre');
+                  return;
+                }
+                if (roomInput.trim().length === 0) {
+                  setRoomError('Ingresa un código de sala');
+                  return;
+                }
+                socket.emit('joinRoom', { code: roomInput.trim().toUpperCase(), playerName: playerName.trim() });
+              }}>Unirse a sala</button>
+            </div>
+            {roomError && <div className="error-msg">{roomError}</div>}
+            <button className="mode-btn" onClick={() => setMode(null)}>Volver</button>
+          </div>
+        </div>
+      );
+    } else {
+      if (status !== 'multi-started') {
+        return (
+          <div className="main-layout">
+            <div className="center-panel">
+              <img src={logo} alt="Logo" className="logo" />
+              <h2>Sala: <span style={{ color: '#ffd54f' }}>{joinedRoom}</span></h2>
+              <p>Comparte este código para que otros se unan.</p>
+              <h3>Jugadores en la sala:</h3>
+              <ul style={{ listStyle: 'none', padding: 0 }}>
+                {players.map(p => (
+                  <li key={p.id} style={{ fontWeight: p.id === socket.id ? 'bold' : 'normal' }}>
+                    {p.name} {p.id === socket.id ? '(Tú)' : ''} {isCreator && p.id === socket.id ? '(Creador)' : ''}
+                  </li>
+                ))}
+              </ul>
+              {isCreator && (
+                <button className="mode-btn" onClick={() => socket.emit('startGameInRoom', joinedRoom)}>
+                  Iniciar partida
+                </button>
+              )}
+              <button className="mode-btn" onClick={() => {
+                setJoinedRoom(null);
+                setRoomCode('');
+                setRoomInput('');
+                setRoomError('');
+                setPlayers([]);
+                setIsCreator(false);
+                socket.emit('leaveRoom', joinedRoom);
+              }}>Salir de la sala</button>
+              <button className="mode-btn" onClick={() => setMode(null)}>Volver</button>
+            </div>
+          </div>
+        );
+      } else {
+        if (multiGameState) {
+          const gs = multiGameState;
+          const isMyTurn = gs.phase === 'playing' && gs.players[gs.turn]?.id === socketId;
+          const isResult = gs.phase === 'result';
+          const myPlayer = gs.players.find(p => p.id === socketId);
+          return (
+            <div className="main-layout">
+              <div className="center-panel">
+                <img src={logo} alt="Logo" className="logo" />
+                <h2>Partida en sala: <span style={{ color: '#ffd54f' }}>{joinedRoom}</span></h2>
+                <h3>Jugadores:</h3>
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                  {gs.players.map((p, idx) => (
+                    <li key={p.id} style={{ fontWeight: p.id === socketId ? 'bold' : 'normal', color: gs.turn === idx ? '#ffd54f' : undefined }}>
+                      {p.name} {p.id === socketId ? '(Tú)' : ''} {isCreator && p.id === socketId ? '(Creador)' : ''}
+                      {gs.turn === idx && gs.phase === 'playing' ? ' ← Turno' : ''}
+                      {p.isBust ? ' 💥' : ''}
+                      {p.isBlackjack ? ' 🂡' : ''}
+                      {p.isStand && !p.isBust ? ' (Plantado)' : ''}
+                      {isResult && gs.results && gs.results[p.id] && (
+                        <span style={{ marginLeft: 8 }}>
+                          {gs.results[p.id] === 'win' && '🏆'}
+                          {gs.results[p.id] === 'lose' && '❌'}
+                          {gs.results[p.id] === 'draw' && '🤝'}
+                          {gs.results[p.id] === 'bust' && '💥'}
+                          {gs.results[p.id] === 'blackjack' && '🂡'}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <div style={{ display: 'flex', gap: '2em', margin: '2em 0' }}>
+                  <div>
+                    <h4>Dealer</h4>
+                    <div className="hand-row dealer-cards">
+                      {gs.dealer.hand.map((card, idx) => (
+                        <PlayingCard key={idx} value={card.value} suit={card.suit} faceDown={false} flipped={true} />
+                      ))}
+                    </div>
+                    <div className="hand-total">Total: {gs.dealer.total}</div>
+                  </div>
+                  <div>
+                    <h4>Tu mano</h4>
+                    <div className="hand-row player-cards">
+                      {myPlayer?.hand.map((card, idx) => (
+                        <PlayingCard key={idx} value={card.value} suit={card.suit} faceDown={false} flipped={true} />
+                      ))}
+                    </div>
+                    <div className="hand-total">Total: {myPlayer?.total}</div>
+                  </div>
+                </div>
+                {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && (
+                  <div className="action-btn-row">
+                    <button className="action-btn hit-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'hit' })}>Pedir carta</button>
+                    <button className="action-btn stand-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'stand' })}>Plantarse</button>
+                  </div>
+                )}
+                {gs.phase === 'playing' && !isMyTurn && <div className="status-msg">Esperando el turno de <b>{gs.players[gs.turn]?.name}</b>...</div>}
+                {isResult && (
+                  <div className="status-msg">
+                    <h3>Resultados:</h3>
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                      {gs.players.map(p => (
+                        <li key={p.id}>
+                          {p.name}: {gs.results && gs.results[p.id]}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {isResult && isCreator && (
+                  <button className="mode-btn" onClick={() => {
+                    socket.emit('restartGameInRoom', joinedRoom);
+                    setStatus('multi-started');
+                    setMultiGameState(null);
+                  }}>Siguiente Ronda</button>
+                )}
+                <button className="mode-btn" onClick={() => {
+                  setJoinedRoom(null);
+                  setRoomCode('');
+                  setRoomInput('');
+                  setRoomError('');
+                  setPlayers([]);
+                  setIsCreator(false);
+                  setStatus('');
+                  setMultiGameState(null);
+                  socket.emit('leaveRoom', joinedRoom);
+                }}>Salir de la sala</button>
+                <button className="mode-btn" onClick={() => setMode(null)}>Volver</button>
+              </div>
+            </div>
+          );
+        }
+      }
+    }
+  }
 
   // Add error boundary for render
   let renderError = null;
