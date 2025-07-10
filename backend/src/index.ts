@@ -35,6 +35,22 @@ type Room = {
   gameState: GameState | null;
 };
 
+/*
+// ===== MULTIPLAYER: Dealer único y global =====
+// Descomenta este bloque para asegurar que el dealer es el mismo para todos los jugadores de la sala.
+// 1. El dealer y su mano viven en el estado global de la sala (room.gameState.dealer)
+// 2. Cada vez que cambie el estado de la partida, se debe emitir el estado completo (incluyendo dealer) a todos los sockets de la sala.
+// 3. Los jugadores nunca deben tener una copia local del dealer, siempre se usa el del estado global.
+//
+// Ejemplo de actualización (en handlers de acciones):
+//
+// room.gameState.dealer = actualizarDealer(room.gameState.dealer, room.gameState.deck);
+// io.to(roomCode).emit('gameStateUpdate', room.gameState);
+//
+// Para activar, elimina los comentarios de este bloque y asegúrate de usar SIEMPRE room.gameState.dealer como fuente de verdad.
+// =========================================================
+*/
+
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -87,7 +103,10 @@ function calculateHand(cards: Card[]) {
 function emitPlayersUpdate(roomCode: string) {
   const room = rooms.get(roomCode);
   if (room) {
-    io.to(roomCode).emit('playersUpdate', room.players.map(p => ({ id: p.id, name: p.name })));
+    io.to(roomCode).emit('playersUpdate', {
+      players: room.players.map(p => ({ id: p.id, name: p.name })),
+      creator: room.creator
+    });
   }
 }
 
