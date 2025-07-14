@@ -42,9 +42,28 @@ function App() {
   const [players, setPlayers] = useState([])
   const [socketId, setSocketId] = useState(null)
   const [creatorId, setCreatorId] = useState(null)
-  // isCreator se calcula dinámicamente
-  const isCreator = socketId && creatorId && socketId === creatorId;
   const [multiGameState, setMultiGameState] = useState(null)
+  const [startError, setStartError] = useState('');
+  const [startLoading, setStartLoading] = useState(false);
+
+  // Now it's safe to use socketId and creatorId
+  const isCreator = socketId && creatorId && socketId === creatorId;
+
+
+  const handleStartGame = async () => {
+    setStartError('');
+    setStartLoading(true);
+    try {
+      if (joinedRoom) {
+        socket.emit('startGameInRoom', joinedRoom);
+        // Espera confirmación si lo deseas
+      }
+    } catch (err) {
+      setStartError('Error al iniciar la partida. Intenta de nuevo.');
+    } finally {
+      setStartLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (mode === 'multi') {
@@ -61,12 +80,12 @@ function App() {
         setRoomCode(code);
         setJoinedRoom(code);
         setRoomError('');
-        setIsCreator(true);
+        
       });
       socket.on('roomJoined', code => {
         setJoinedRoom(code);
         setRoomError('');
-        setIsCreator(false);
+        
       });
       socket.on('roomError', msg => {
         setRoomError(msg);
@@ -399,7 +418,13 @@ function App() {
             <div className="main-layout">
               <div className="center-panel">
                 <img src={logo} alt="Logo" className="logo" />
-                <h2>Partida en sala: <span style={{ color: '#ffd54f' }}>{joinedRoom}</span></h2>
+                {/* Solo mostrar el código de sala antes de que inicie la partida */}
+                {multiGameState?.phase === 'waiting' || multiGameState?.phase === undefined ? (
+                  <>
+                    <h2>Sala: <span style={{ color: '#ffd54f' }}>{joinedRoom}</span></h2>
+                    <p>Comparte este código para que otros se unan.</p>
+                  </>
+                ) : null}
                 <h3>Jugadores:</h3>
                 <ul style={{ listStyle: 'none', padding: 0 }}>
                   {gs.players.map((p, idx) => (
@@ -421,43 +446,12 @@ function App() {
                     </li>
                   ))}
                 </ul>
-                {/* Botón para que el creador inicie la partida */}
-                {isCreator && gs.phase === 'betting' && gs.players.length >= 2 && (
-                  <button
-                    className="start-btn"
-                    style={{ marginBottom: '1.5em' }}
-                    onClick={() => {
-                      if (joinedRoom) {
-                        socket.emit('startGameInRoom', joinedRoom);
-                      }
-                    }}
-                  >
-                    Iniciar Partida
-                  </button>
+                {startError && (
+                  <div className="error-msg" role="alert" style={{ marginBottom: '1em' }}>{startError}</div>
                 )}
-                {isCreator && gs.phase === 'betting' && gs.players.length < 2 && (
-                  <button
-                    className="start-btn"
-                    style={{ marginBottom: '1.5em' }}
-                    disabled
-                  >
-                    Esperando más jugadores...
-                  </button>
-                )}
-                {/*
-                // ===== MULTIPLAYER: Dealer único y botones HIT/STAND =====
-                // Descomenta este bloque para activar dealer global y controles en multiplayer
-                // 1. Dealer global: se muestra la mano del dealer igual para todos los jugadores de la sala
-                // 2. Botones HIT/STAND: solo aparecen cuando es tu turno y no estás bust/stand
-                // 3. Los eventos se emiten por socket al backend
-                // 4. Optimizado para renderizar solo lo necesario
-                //
-                // Para activar, elimina los comentarios de este bloque y comenta el bloque actual de dealer+controles
-                // =========================================================
-
-                <div style={{ display: 'flex', gap: '2em', margin: '2em 0' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2em', margin: '2em 0' }}>
                   <div>
-                    <h4>Dealer (Global)</h4>
+                    <h4>Dealer</h4>
                     <div className="hand-row dealer-cards">
                       {gs.dealer.hand.map((card, idx) => (
                         <PlayingCard key={idx} value={card.value} suit={card.suit} faceDown={false} flipped={true} />
@@ -474,69 +468,55 @@ function App() {
                     </div>
                     <div className="hand-total">Total: {myPlayer?.total}</div>
                   </div>
-                </div>
-                {/* Controles de acción solo para tu turno */}
-                {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && (
-                  <div className="action-btn-row">
-                    <button className="action-btn hit-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'hit' })}>Pedir carta</button>
-                    <button className="action-btn stand-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'stand' })}>Plantarse</button>
-                  </div>
-                )}
-                {/* Mensaje de espera si no es tu turno */}
-                {gs.phase === 'playing' && !isMyTurn && (
-                  <div className="status-msg">Esperando el turno de <b>{gs.players[gs.turn]?.name}</b>...</div>
-                )}
-                */}
-                <div style={{ display: 'flex', gap: '2em', margin: '2em 0' }}>
-                  <div>
-                    <h4>Dealer</h4>
-                    <h4>Tu mano</h4>
-                    <div className="hand-row player-cards">
-                      {myPlayer?.hand.map((card, idx) => (
-                        <PlayingCard key={idx} value={card.value} suit={card.suit} faceDown={false} flipped={true} />
-                      ))}
+                  {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && (
+                    <div className="action-btn-row">
+                      <button className="action-btn hit-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'hit' })}>Pedir carta</button>
+                      <button className="action-btn stand-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'stand' })}>Plantarse</button>
                     </div>
-                    <div className="hand-total">Total: {myPlayer?.total}</div>
-                  </div>
-                </div>
-                {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && (
-                  <div className="action-btn-row">
-                    <button className="action-btn hit-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'hit' })}>Pedir carta</button>
-                    <button className="action-btn stand-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'stand' })}>Plantarse</button>
-                  </div>
-                )}
-                {gs.phase === 'playing' && !isMyTurn && <div className="status-msg">Esperando el turno de <b>{gs.players[gs.turn]?.name}</b>...</div>}
-                {isResult && (
-                  <div className="status-msg">
-                    <h3>Resultados:</h3>
-                    <ul style={{ listStyle: 'none', padding: 0 }}>
-                      {gs.players.map(p => (
-                        <li key={p.id}>
-                          {p.name}: {gs.results && gs.results[p.id]}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {isResult && isCreator && (
+                  )}
+                  {gs.phase === 'playing' && !isMyTurn && <div className="status-msg">Esperando el turno de <b>{gs.players[gs.turn]?.name}</b>...</div>}
+                  {isResult && (
+                    <div className="status-msg">
+                      <h3>Resultados:</h3>
+                      <ul style={{ listStyle: 'none', padding: 0 }}>
+                        {gs.players.map(p => (
+                          <li key={p.id}>
+                            {p.name}: {gs.results && gs.results[p.id]}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {isResult && isCreator && (
+                    <button className="mode-btn" onClick={() => {
+                      socket.emit('restartGameInRoom', joinedRoom);
+                      setStatus('multi-started');
+                      setMultiGameState(null);
+                    }}>Siguiente Ronda</button>
+                  )}
                   <button className="mode-btn" onClick={() => {
-                    socket.emit('restartGameInRoom', joinedRoom);
-                    setStatus('multi-started');
+                    setJoinedRoom(null);
+                    setRoomCode('');
+                    setRoomInput('');
+                    setRoomError('');
+                    setPlayers([]);
+                    setIsCreator(false);
+                    setStatus('');
                     setMultiGameState(null);
-                  }}>Siguiente Ronda</button>
-                )}
-                <button className="mode-btn" onClick={() => {
-                  setJoinedRoom(null);
-                  setRoomCode('');
-                  setRoomInput('');
-                  setRoomError('');
-                  setPlayers([]);
-                  setIsCreator(false);
-                  setStatus('');
-                  setMultiGameState(null);
-                  socket.emit('leaveRoom', joinedRoom);
-                }}>Salir de la sala</button>
-                <button className="mode-btn" onClick={() => setMode(null)}>Volver</button>
+                    socket.emit('leaveRoom', joinedRoom);
+                  }}>Salir de la sala</button>
+                  <button className="mode-btn" onClick={() => setMode(null)}>Volver</button>
+                </div>
+              </div>
+            </div>
+          );
+        } else {
+          return (
+            <div className="main-layout">
+              <div className="center-panel">
+                <img src={logo} alt="Logo" className="logo" />
+                <h2>Sala: <span style={{ color: '#ffd54f' }}>{joinedRoom}</span></h2>
+                <p>Esperando a que el creador inicie la partida...</p>
               </div>
             </div>
           );
@@ -545,7 +525,6 @@ function App() {
     }
   }
 
-  // Add error boundary for render
   let renderError = null;
   let mainContent = null;
   try {
