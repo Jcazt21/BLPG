@@ -1,200 +1,3 @@
-body, html, #root {
-  min-height: 100vh;
-  min-width: 100vw;
-  margin: 0;
-  padding: 0;
-  background: #232b23;
-  overflow-x: hidden;
-}
-
-.logo {
-  width: 80px;
-  height: auto;
-  display: block;
-  margin-bottom: 1vw;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-.app-outer-center {
-  min-height: 100vh;
-  width: 100vw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(ellipse at center, #232b23 60%, #181c1b 100%);
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.blackjack-table {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  min-height: 90vh;
-  max-width: 90vw;
-  width: 100%;
-  aspect-ratio: 16/9;
-  background: linear-gradient(160deg, #232b23 80%, #181c1b 100%);
-  border-radius: 2vw;
-  box-shadow: 0 8px 48px #000c, 0 1.5px 0 #2e7d32;
-  padding: 2vw 2vw 1vw 2vw;
-  box-sizing: border-box;
-  position: relative;
-  flex-shrink: 1;
-  overflow-y: auto;
-}
-
-.header-row {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.5vw;
-}
-
-.balance-bet-row {
-  display: flex;
-  gap: 2vw;
-  margin-bottom: 0.5vw;
-  font-size: 1.3vw;
-  color: #ffd54f;
-  justify-content: center;
-}
-
-.dealer-section {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1vw;
-}
-
-.dealer-label {
-  color: #b6e2a1;
-  font-size: 1.1vw;
-  margin-bottom: 0.5vw;
-  text-align: center;
-}
-
-.hand-row {
-  display: flex;
-  flex-direction: row;
-  gap: 0.7vw;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 0.5vw;
-  flex-wrap: wrap;
-}
-
-.vs-separator {
-  font-size: 2vw;
-  color: #ffd54f;
-  margin: 1vw 0 1vw 0;
-  font-weight: bold;
-  letter-spacing: 0.1em;
-  text-shadow: 0 2px 8px #000a;
-}
-
-.player-section {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1vw;
-}
-
-.player-label {
-  color: #b6e2a1;
-  font-size: 1.1vw;
-  margin-bottom: 0.5vw;
-  text-align: center;
-}
-
-.status-msg {
-  font-size: 1.3vw;
-  color: #ffd54f;
-  margin: 1vw 0 0.5vw 0;
-  text-align: center;
-  min-height: 2vw;
-  font-weight: bold;
-  letter-spacing: 0.03em;
-  text-shadow: 0 2px 8px #000a;
-}
-
-.controls-row {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 1vw;
-  margin: 0.5vw 0 0 0;
-  flex-wrap: wrap;
-  position: sticky;
-  bottom: 0;
-  background: linear-gradient(160deg, #232b23 80%, #181c1b 100%);
-  z-index: 10;
-  padding-bottom: 2vw;
-  min-height: 60px;
-}
-
-.betting-panel {
-  background: rgba(24,28,27,0.95);
-  border-radius: 1vw;
-  padding: 0.7vw 0.7vw 0.7vw 0.7vw;
-  box-shadow: 0 2px 12px #000a;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5vw;
-  min-width: 7vw;
-  max-width: 16vw;
-}
-
-.start-panel {
-  display: flex;
-  flex-direction: row;
-  gap: 0.7vw;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.5vw;
-}
-
-.chip-btn {
-  width: 3vw;
-  height: 3vw;
-  font-size: 1vw;
-  display: flex;
-  align-items: center;
   justify-content: center;
   text-align: center;
   white-space: nowrap;
@@ -369,10 +172,23 @@ h1 {
 
 .main-layout {
   display: grid;
-  grid-template-columns: 1fr 2.5fr 1.2fr;
+  grid-template-columns: 1fr minmax(400px, 900px) 1fr;
   min-height: 100vh;
   width: 100vw;
   background: #232b23;
+  gap: 0;
+}
+
+/* Para pantallas medianas/pequeñas, reducir el espacio lateral */
+@media (max-width: 900px) {
+  .main-layout {
+    grid-template-columns: 0.5fr 1fr 0.5fr;
+  }
+}
+@media (max-width: 600px) {
+  .main-layout {
+    grid-template-columns: 0.1fr 1fr 0.1fr;
+  }
 }
 .left-panel {
   display: flex;
@@ -387,16 +203,31 @@ h1 {
   letter-spacing: 0.1em;
 }
 .center-panel {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   min-height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
   position: relative;
   padding-top: 2vw;
+  padding-bottom: 2vw;
+  margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 900px;
 }
 .dealer-cards, .player-cards {
-  margin-bottom: 0.5vw;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0.5vw;
+  margin-bottom: 1vw;
+  flex-wrap: wrap;
+  min-height: 6vw;
 }
 .action-btn-row {
   display: flex;
