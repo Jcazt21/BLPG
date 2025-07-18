@@ -7,7 +7,7 @@ import { io } from 'socket.io-client';
 // const socket = io(import.meta.env.VITE_API_URL, { autoConnect: false });
 // Para activar multiplayer, descomenta y usa socket.connect(), socket.on(), etc.
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5185/game';
+const API_URL = 'http://172.16.50.34:5185/game';
 const WS_URL = API_URL.replace(/\/game$/, '');
 const socket = io(WS_URL, { autoConnect: false });
 

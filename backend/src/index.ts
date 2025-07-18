@@ -9,7 +9,7 @@ import { Card, Suit, Value } from './types/gameTypes';
 
 const app = express();
 const PORT = process.env.PORT || 5185;
-const HOST = process.env.HOST || 'localhost';
+const HOST = process.env.HOST || '172.16.50.34';
 
 app.use(cors());
 app.use(express.json());
