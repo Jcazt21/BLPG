@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import PlayingCard from './PlayingCard'
 import './PlayingCard.css'
+import { CasinoTable, BettingPanel } from './components'
 import logo from './assets/logo.png'
 import { io } from 'socket.io-client';
-// const socket = io(import.meta.env.VITE_API_URL, { autoConnect: false });
-// Para activar multiplayer, descomenta y usa socket.connect(), socket.on(), etc.
+import { ConfigManager } from './config/environment';
 
-const API_URL = 'http://172.16.50.34:5185/game';
-const WS_URL = API_URL.replace(/\/game$/, '');
+// Load and validate configuration
+const config = ConfigManager.validate();
+const API_URL = config.API_URL;
+const WS_URL = config.WS_URL;
 const socket = io(WS_URL, { autoConnect: false });
 
 const START_BALANCE = 1000
@@ -45,6 +47,9 @@ function App() {
   const [multiGameState, setMultiGameState] = useState(null)
   const [startError, setStartError] = useState('');
   const [startLoading, setStartLoading] = useState(false);
+  const [multiBet, setMultiBet] = useState(0);
+  const [multiBalance, setMultiBalance] = useState(START_BALANCE);
+  const [bettingError, setBettingError] = useState('');
 
   // Now it's safe to use socketId and creatorId
   const isCreator = socketId && creatorId && socketId === creatorId;
@@ -101,6 +106,15 @@ function App() {
       });
       socket.on('gameStateUpdate', state => {
         setMultiGameState(state);
+        // Update player's balance and bet from game state
+        const myPlayer = state.players?.find(p => p.id === socketId);
+        if (myPlayer) {
+          setMultiBalance(myPlayer.balance);
+          setMultiBet(myPlayer.bet);
+        }
+      });
+      socket.on('bettingError', msg => {
+        setBettingError(msg);
       });
       return () => {
         socket.off('connect');
@@ -111,6 +125,7 @@ function App() {
         socket.off('playersUpdate');
         socket.off('gameStarted');
         socket.off('gameStateUpdate');
+        socket.off('bettingError');
         socket.disconnect();
       };
     }
@@ -242,6 +257,47 @@ function App() {
 
   // Disable betting if balance is 0
   const canBet = balance > 0
+
+  // Multiplayer betting handlers
+  const handleMultiChip = (value) => {
+    if (multiGameState?.phase !== 'betting') return;
+    const myPlayer = multiGameState.players?.find(p => p.id === socketId);
+    if (!myPlayer || myPlayer.hasPlacedBet) return;
+    
+    const newBet = multiBet + value;
+    if (newBet > multiBalance + multiBet) return; // Can't exceed available balance
+    
+    setMultiBet(newBet);
+    socket.emit('updateBet', { code: joinedRoom, amount: newBet });
+  };
+
+  const handleMultiAllIn = () => {
+    if (multiGameState?.phase !== 'betting') return;
+    const myPlayer = multiGameState.players?.find(p => p.id === socketId);
+    if (!myPlayer || myPlayer.hasPlacedBet) return;
+    
+    const allInAmount = multiBalance + multiBet;
+    setMultiBet(allInAmount);
+    socket.emit('updateBet', { code: joinedRoom, amount: allInAmount });
+  };
+
+  const handleMultiClearBet = () => {
+    if (multiGameState?.phase !== 'betting') return;
+    const myPlayer = multiGameState.players?.find(p => p.id === socketId);
+    if (!myPlayer || myPlayer.hasPlacedBet) return;
+    
+    setMultiBet(0);
+    socket.emit('updateBet', { code: joinedRoom, amount: 0 });
+  };
+
+  const handleMultiPlaceBet = () => {
+    if (multiGameState?.phase !== 'betting' || multiBet <= 0) return;
+    const myPlayer = multiGameState.players?.find(p => p.id === socketId);
+    if (!myPlayer || myPlayer.hasPlacedBet) return;
+    
+    socket.emit('placeBet', { code: joinedRoom, amount: multiBet });
+    setBettingError('');
+  };
 
   // Card rendering helper
   const renderCard = (card, idx, isDealer = false) => (
@@ -401,7 +457,7 @@ function App() {
                 setRoomInput('');
                 setRoomError('');
                 setPlayers([]);
-                setIsCreator(false);
+                setCreatorId(null);
                 socket.emit('leaveRoom', joinedRoom);
               }}>Salir de la sala</button>
               <button className="mode-btn" onClick={() => setMode(null)}>Volver</button>
@@ -414,99 +470,159 @@ function App() {
           const isMyTurn = gs.phase === 'playing' && gs.players[gs.turn]?.id === socketId;
           const isResult = gs.phase === 'result';
           const myPlayer = gs.players.find(p => p.id === socketId);
+          
+          // Transform game state data for CasinoTable component
+          const casinoPlayers = gs.players.map((p, idx) => ({
+            id: p.id,
+            name: p.name,
+            position: idx,
+            cards: p.hand || [],
+            total: p.total || 0,
+            bet: p.bet || 0,
+            balance: p.balance || 1000,
+            status: p.isBust ? 'bust' : p.isBlackjack ? 'blackjack' : p.isStand ? 'stand' : 'playing',
+            isCurrentPlayer: p.id === socketId
+          }));
+
+          const casinoDealer = {
+            hand: gs.dealer?.hand || [],
+            total: gs.dealer?.total || 0
+          };
+
           return (
-            <div className="main-layout">
-              <div className="center-panel">
-                <img src={logo} alt="Logo" className="logo" />
-                {/* Solo mostrar el código de sala antes de que inicie la partida */}
-                {multiGameState?.phase === 'waiting' || multiGameState?.phase === undefined ? (
-                  <>
-                    <h2>Sala: <span style={{ color: '#ffd54f' }}>{joinedRoom}</span></h2>
-                    <p>Comparte este código para que otros se unan.</p>
-                  </>
-                ) : null}
-                <h3>Jugadores:</h3>
-                <ul style={{ listStyle: 'none', padding: 0 }}>
-                  {gs.players.map((p, idx) => (
-                    <li key={p.id} style={{ fontWeight: p.id === socketId ? 'bold' : 'normal', color: gs.turn === idx ? '#ffd54f' : undefined }}>
-                      {p.name} {p.id === socketId ? '(Tú)' : ''} {isCreator && p.id === socketId ? '(Creador)' : ''}
-                      {gs.turn === idx && gs.phase === 'playing' ? ' ← Turno' : ''}
-                      {p.isBust ? ' 💥' : ''}
-                      {p.isBlackjack ? ' 🂡' : ''}
-                      {p.isStand && !p.isBust ? ' (Plantado)' : ''}
-                      {isResult && gs.results && gs.results[p.id] && (
-                        <span style={{ marginLeft: 8 }}>
-                          {gs.results[p.id] === 'win' && '🏆'}
-                          {gs.results[p.id] === 'lose' && '❌'}
-                          {gs.results[p.id] === 'draw' && '🤝'}
-                          {gs.results[p.id] === 'bust' && '💥'}
-                          {gs.results[p.id] === 'blackjack' && '🂡'}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                {startError && (
-                  <div className="error-msg" role="alert" style={{ marginBottom: '1em' }}>{startError}</div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2em', margin: '2em 0' }}>
-                  <div>
-                    <h4>Dealer</h4>
-                    <div className="hand-row dealer-cards">
-                      {gs.dealer.hand.map((card, idx) => (
-                        <PlayingCard key={idx} value={card.value} suit={card.suit} faceDown={false} flipped={true} />
-                      ))}
-                    </div>
-                    <div className="hand-total">Total: {gs.dealer.total}</div>
-                  </div>
-                  <div>
-                    <h4>Tu mano</h4>
-                    <div className="hand-row player-cards">
-                      {myPlayer?.hand.map((card, idx) => (
-                        <PlayingCard key={idx} value={card.value} suit={card.suit} faceDown={false} flipped={true} />
-                      ))}
-                    </div>
-                    <div className="hand-total">Total: {myPlayer?.total}</div>
-                  </div>
-                  {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && (
-                    <div className="action-btn-row">
-                      <button className="action-btn hit-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'hit' })}>Pedir carta</button>
-                      <button className="action-btn stand-btn" onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'stand' })}>Plantarse</button>
+            <div className="casino-layout">
+              {/* Top bar with room info and controls */}
+              <div className="casino-header">
+                <div className="room-info">
+                  <img src={logo} alt="Logo" className="logo-small" />
+                  {(multiGameState?.phase === 'waiting' || multiGameState?.phase === undefined) && (
+                    <div className="room-code">
+                      Room: <span style={{ color: '#ffd54f' }}>{joinedRoom}</span>
                     </div>
                   )}
-                  {gs.phase === 'playing' && !isMyTurn && <div className="status-msg">Esperando el turno de <b>{gs.players[gs.turn]?.name}</b>...</div>}
-                  {isResult && (
-                    <div className="status-msg">
-                      <h3>Resultados:</h3>
-                      <ul style={{ listStyle: 'none', padding: 0 }}>
-                        {gs.players.map(p => (
-                          <li key={p.id}>
-                            {p.name}: {gs.results && gs.results[p.id]}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {isResult && isCreator && (
-                    <button className="mode-btn" onClick={() => {
-                      socket.emit('restartGameInRoom', joinedRoom);
-                      setStatus('multi-started');
-                      setMultiGameState(null);
-                    }}>Siguiente Ronda</button>
-                  )}
-                  <button className="mode-btn" onClick={() => {
-                    setJoinedRoom(null);
-                    setRoomCode('');
-                    setRoomInput('');
-                    setRoomError('');
-                    setPlayers([]);
-                    setIsCreator(false);
-                    setStatus('');
-                    setMultiGameState(null);
-                    socket.emit('leaveRoom', joinedRoom);
-                  }}>Salir de la sala</button>
-                  <button className="mode-btn" onClick={() => setMode(null)}>Volver</button>
                 </div>
+                
+                <div className="casino-controls">
+                  {/* Control buttons */}
+                  <div className="control-buttons">
+                    {isResult && isCreator && (
+                      <button className="control-btn next-btn" onClick={() => {
+                        socket.emit('restartGameInRoom', joinedRoom);
+                        setStatus('multi-started');
+                        setMultiGameState(null);
+                      }}>
+                        Next Round
+                      </button>
+                    )}
+                    
+                    <button className="control-btn leave-btn" onClick={() => {
+                      setJoinedRoom(null);
+                      setRoomCode('');
+                      setRoomInput('');
+                      setRoomError('');
+                      setPlayers([]);
+                      setStatus('');
+                      setMultiGameState(null);
+                      socket.emit('leaveRoom', joinedRoom);
+                    }}>
+                      Leave
+                    </button>
+                    
+                    <button className="control-btn menu-btn" onClick={() => setMode(null)}>
+                      Menu
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main casino table area */}
+              <CasinoTable
+                players={casinoPlayers}
+                dealer={casinoDealer}
+                gamePhase={gs.phase || 'waiting'}
+                currentTurn={gs.turn}
+              />
+
+              {/* Bottom status bar */}
+              <div className="casino-footer">
+                {/* Betting Panel - shown during betting phase */}
+                {gs.phase === 'betting' && myPlayer && (
+                  <div className="betting-section">
+                    <BettingPanel
+                      balance={multiBalance}
+                      currentBet={multiBet}
+                      onChipClick={handleMultiChip}
+                      onAllIn={handleMultiAllIn}
+                      onClearBet={handleMultiClearBet}
+                      onPlaceBet={handleMultiPlaceBet}
+                      disabled={myPlayer.hasPlacedBet}
+                      showPlaceBetButton={true}
+                      noChipsMessage={multiBalance === 0 ? 'No more chips!' : ''}
+                    />
+                    {bettingError && (
+                      <div className="error-msg" style={{ marginTop: '1rem' }}>
+                        {bettingError}
+                      </div>
+                    )}
+                    {myPlayer.hasPlacedBet && (
+                      <div className="status-msg" style={{ marginTop: '1rem' }}>
+                        Bet placed! Waiting for other players...
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Action buttons for current player */}
+                {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && (
+                  <div className="action-buttons">
+                    <button 
+                      className="action-btn hit-btn" 
+                      onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'hit' })}
+                    >
+                      Hit
+                    </button>
+                    <button 
+                      className="action-btn stand-btn" 
+                      onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'stand' })}
+                    >
+                      Stand
+                    </button>
+                  </div>
+                )}
+
+                {/* Waiting message */}
+                {gs.phase === 'playing' && !isMyTurn && (
+                  <div className="status-msg">
+                    Waiting for <b>{gs.players[gs.turn]?.name}</b>'s turn...
+                  </div>
+                )}
+
+                {/* Dealing phase message */}
+                {gs.phase === 'dealing' && (
+                  <div className="status-msg">
+                    Dealing cards...
+                  </div>
+                )}
+
+                {/* Results */}
+                {isResult && (
+                  <div className="results-summary">
+                    <span>Round Complete - </span>
+                    {gs.players.map((p, idx) => (
+                      <span key={p.id} style={{ marginRight: '1rem' }}>
+                        {p.name}: {gs.results && gs.results[p.id] ? gs.results[p.id].status : 'unknown'} 
+                        {gs.results && gs.results[p.id] && gs.results[p.id].payout > 0 && ` (+${gs.results[p.id].payout})`}
+                        {idx < gs.players.length - 1 ? ' | ' : ''}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {startError && (
+                  <div className="error-msg" role="alert">
+                    {startError}
+                  </div>
+                )}
               </div>
             </div>
           );

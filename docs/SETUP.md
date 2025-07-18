@@ -14,6 +14,7 @@ This guide provides step-by-step instructions for setting up the Blackjack Game 
 
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [Docker Setup (Recommended)](#docker-setup-recommended)
 - [Development Setup](#development-setup)
 - [Production Setup](#production-setup)
 - [Environment Variables](#environment-variables)
@@ -75,6 +76,170 @@ npm run dev
 The application will be available at:
 - **Frontend**: http://localhost:5180
 - **Backend**: http://172.16.50.34:5185 (or your configured HOST)
+
+## Docker Setup (Recommended)
+
+Docker provides the easiest way to run the application with a single container that includes both frontend and backend services.
+
+### Prerequisites for Docker
+
+- **Docker** (version 20.0 or higher)
+  - Download from [docker.com](https://www.docker.com/get-started)
+  - Verify installation: `docker --version`
+- **Docker Compose** (usually included with Docker Desktop)
+  - Verify installation: `docker-compose --version`
+
+### Quick Docker Start
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd blackjack-game
+
+# 2. Configure environment (optional - uses defaults if skipped)
+cp .env.example .env
+# Edit .env file to set your HOST IP address
+
+# 3. Start the application
+docker-compose up --build
+```
+
+The application will be available at:
+- **Frontend**: http://localhost:5180 (or your configured HOST:FRONTEND_PORT)
+- **Backend**: http://localhost:5185 (or your configured HOST:BACKEND_PORT)
+
+### Docker Development Mode
+
+For development with hot reloading:
+
+```bash
+# Start in development mode (uses docker-compose.override.yml automatically)
+docker-compose up --build
+
+# Or explicitly specify development configuration
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build
+```
+
+**Development Features:**
+- Hot reloading for both frontend and backend
+- Source code mounted as volumes
+- Development dependencies included
+- Automatic restart on file changes
+
+### Docker Production Mode
+
+For production deployment:
+
+```bash
+# Use production environment file
+cp .env.production .env
+# Edit .env to set your production HOST IP
+
+# Build and start production container
+docker-compose -f docker-compose.yml up --build -d
+```
+
+**Production Features:**
+- Optimized builds for both services
+- Minimal container size
+- Health checks enabled
+- Automatic restart on failure
+
+### Docker Commands Reference
+
+```bash
+# Build the container
+docker-compose build
+
+# Start services in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Rebuild and restart
+docker-compose up --build --force-recreate
+
+# Check service health
+docker-compose ps
+
+# Access container shell
+docker-compose exec blackjack-app sh
+```
+
+### Docker Environment Configuration
+
+The Docker setup uses the same environment variables as the manual setup. Key variables for Docker:
+
+```env
+# Network Configuration - IMPORTANT for Docker
+HOST=0.0.0.0              # For container networking
+BACKEND_PORT=5185         # Backend service port
+FRONTEND_PORT=5180        # Frontend service port
+
+# Environment
+NODE_ENV=production       # or development
+
+# CORS Configuration
+CORS_ORIGIN=*            # Adjust for production security
+```
+
+**Important Docker Notes:**
+- Set `HOST=0.0.0.0` for proper container networking
+- The container exposes both ports automatically
+- Environment variables are passed from `.env` file to container
+- Health checks monitor both frontend and backend services
+
+### Docker Troubleshooting
+
+#### Container Build Issues
+
+**Problem**: Docker build fails with dependency errors.
+
+**Solution**:
+```bash
+# Clear Docker cache and rebuild
+docker system prune -a
+docker-compose build --no-cache
+```
+
+#### Port Conflicts
+
+**Problem**: "Port already in use" errors.
+
+**Solution**:
+```bash
+# Check what's using the ports
+docker ps
+netstat -tulpn | grep :5185
+
+# Stop conflicting containers
+docker-compose down
+docker stop $(docker ps -q)
+
+# Change ports in .env file if needed
+```
+
+#### Health Check Failures
+
+**Problem**: Container shows as unhealthy.
+
+**Solution**:
+```bash
+# Check health check logs
+docker-compose logs blackjack-app
+
+# Manually test health endpoints
+curl http://localhost:5185/health
+curl http://localhost:5180
+
+# Restart with fresh build
+docker-compose down
+docker-compose up --build
+```
 
 ## Development Setup
 

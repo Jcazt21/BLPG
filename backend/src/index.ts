@@ -1,38 +1,87 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+
+// Load environment variables from root directory
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 import express from 'express';
 import cors from 'cors';
 import gameRoutes from './routes/gameRoutes';
 import { createServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Card, Suit, Value } from './types/gameTypes';
+import { ConfigManager } from './config/environment';
+
+// Validate configuration on startup
+ConfigManager.validate();
+const config = ConfigManager.get();
 
 const app = express();
-const PORT = process.env.PORT || 5185;
-const HOST = process.env.HOST || '172.16.50.34';
 
-app.use(cors());
+app.use(cors({
+  origin: config.CORS_ORIGIN,
+  credentials: true
+}));
 app.use(express.json());
+
+// Health check endpoint for Docker
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    service: 'blackjack-backend'
+  });
+});
+
 app.use('/game', gameRoutes);
 
 // --- Multiplayer Room Logic ---
-type Player = { id: string, name: string, hand: Card[], total: number, isBust: boolean, isStand: boolean, isBlackjack: boolean, bet: number, balance: number };
-type Dealer = { hand: Card[], hiddenCard?: Card, total: number, isBust: boolean, isBlackjack: boolean };
-type GameState = {
+type MultiplayerPlayer = { 
+  id: string;
+  name: string;
+  position: number;
+  hand: Card[];
+  total: number;
+  isBust: boolean;
+  isStand: boolean;
+  isBlackjack: boolean;
+  bet: number;
+  balance: number;
+  hasPlacedBet: boolean;
+  status: 'playing' | 'stand' | 'bust' | 'blackjack';
+};
+
+type MultiplayerDealer = { 
+  hand: Card[];
+  hiddenCard?: Card;
+  total: number;
+  isBust: boolean;
+  isBlackjack: boolean;
+};
+
+type MultiplayerGameState = {
   started: boolean;
-  players: Player[];
-  dealer: Dealer;
+  players: MultiplayerPlayer[];
+  dealer: MultiplayerDealer;
   deck: Card[];
   turn: number; // index of current player
-  phase: 'betting' | 'playing' | 'dealer' | 'result';
-  results?: { [playerId: string]: 'win' | 'lose' | 'draw' | 'bust' | 'blackjack' };
+  phase: 'betting' | 'dealing' | 'playing' | 'dealer' | 'result';
+  results?: { [playerId: string]: GameResult };
+  bettingComplete: boolean;
+};
+
+type GameResult = {
+  status: 'win' | 'lose' | 'draw' | 'bust' | 'blackjack';
+  payout: number;
+  finalBalance: number;
 };
 
 type Room = {
   sockets: Set<string>;
-  players: Player[];
+  players: Map<string, MultiplayerPlayer>;
   creator: string;
-  gameState: GameState | null;
+  gameState: MultiplayerGameState | null;
+  bettingPhase: boolean;
+  playersReady: Set<string>;
 };
 
 /*
@@ -104,14 +153,103 @@ function emitPlayersUpdate(roomCode: string) {
   const room = rooms.get(roomCode);
   if (room) {
     io.to(roomCode).emit('playersUpdate', {
-      players: room.players.map(p => ({ id: p.id, name: p.name })),
+      players: Array.from(room.players.values()).map(p => ({ id: p.id, name: p.name })),
       creator: room.creator
     });
   }
 }
 
+// Validate bet amount for a player
+function validateBet(player: MultiplayerPlayer, betAmount: number): { valid: boolean; error?: string } {
+  if (betAmount < 0) {
+    return { valid: false, error: 'Bet amount cannot be negative' };
+  }
+  
+  if (betAmount === 0) {
+    return { valid: false, error: 'Bet amount must be greater than zero' };
+  }
+  
+  if (betAmount > player.balance + player.bet) {
+    return { valid: false, error: 'Insufficient balance for this bet' };
+  }
+  
+  return { valid: true };
+}
+
+// Check if all players have placed valid bets
+function allPlayersHaveValidBets(room: Room): boolean {
+  const players = Array.from(room.players.values());
+  
+  // Must have at least one player
+  if (players.length === 0) return false;
+  
+  // All players must have placed a bet and the bet must be valid
+  return players.every(player => {
+    return player.hasPlacedBet && player.bet > 0 && player.bet <= 1000; // Max bet limit
+  });
+}
+
+function startDealingPhase(roomCode: string) {
+  const room = rooms.get(roomCode);
+  if (!room || !room.gameState) return;
+  
+  // Create shuffled deck
+  const deck = createShuffledDeck();
+  
+  // Deal initial cards using authentic casino sequence
+  const players = Array.from(room.players.values()).map((p: MultiplayerPlayer) => {
+    const hand = [deck.pop()!, deck.pop()!];
+    const handStatus = calculateHand(hand);
+    return {
+      ...p,
+      hand,
+      total: handStatus.total,
+      isBust: handStatus.isBust,
+      isBlackjack: handStatus.isBlackjack,
+      isStand: false,
+      status: handStatus.isBust ? 'bust' as const : handStatus.isBlackjack ? 'blackjack' as const : 'playing' as const,
+    };
+  });
+  
+  // Deal dealer cards (one visible, one hidden)
+  const dealerHand = [deck.pop()!, deck.pop()!];
+  const dealerStatus = calculateHand([dealerHand[0]]);
+  const dealer: MultiplayerDealer = {
+    hand: [dealerHand[0]],
+    hiddenCard: dealerHand[1],
+    total: dealerStatus.total,
+    isBust: dealerStatus.isBust,
+    isBlackjack: false,
+  };
+  
+  // Update game state
+  room.gameState.players = players;
+  room.gameState.dealer = dealer;
+  room.gameState.deck = deck;
+  room.gameState.phase = 'dealing';
+  room.gameState.bettingComplete = true;
+  room.gameState.turn = 0;
+  
+  // Transition to playing phase after a short delay
+  io.to(roomCode).emit('gameStateUpdate', room.gameState);
+  
+  setTimeout(() => {
+    if (room.gameState) {
+      room.gameState.phase = 'playing';
+      io.to(roomCode).emit('gameStateUpdate', room.gameState);
+    }
+  }, 2000); // 2 second delay for dealing animation
+  
+  console.log(`Dealing phase started in room ${roomCode}`);
+}
+
 const httpServer = createServer(app);
-const io = new SocketIOServer(httpServer, { cors: { origin: '*' } });
+const io = new SocketIOServer(httpServer, { 
+  cors: { 
+    origin: config.CORS_ORIGIN,
+    credentials: true
+  } 
+});
 
 io.on('connection', (socket: Socket) => {
   console.log('Nuevo cliente WebSocket conectado:', socket.id);
@@ -121,22 +259,29 @@ io.on('connection', (socket: Socket) => {
     do {
       code = generateRoomCode();
     } while (rooms.has(code));
-    const player: Player = {
+    const player: MultiplayerPlayer = {
       id: socket.id,
       name: playerName || 'Jugador',
+      position: 0,
       hand: [],
       total: 0,
       isBust: false,
       isStand: false,
       isBlackjack: false,
-      bet: 100,
+      bet: 0,
       balance: 1000,
+      hasPlacedBet: false,
+      status: 'playing',
     };
+    const players = new Map<string, MultiplayerPlayer>();
+    players.set(socket.id, player);
     rooms.set(code, {
       sockets: new Set([socket.id]),
-      players: [player],
+      players,
       creator: socket.id,
-      gameState: null
+      gameState: null,
+      bettingPhase: false,
+      playersReady: new Set(),
     });
     socket.join(code);
     socket.emit('roomCreated', code);
@@ -151,23 +296,26 @@ io.on('connection', (socket: Socket) => {
       return;
     }
     const room = rooms.get(code)!;
-    if (room.players.find(p => p.id === socket.id)) {
+    if (room.players.has(socket.id)) {
       socket.emit('roomError', 'Ya estás en la sala');
       return;
     }
-    const player: Player = {
+    const player: MultiplayerPlayer = {
       id: socket.id,
       name: playerName || 'Jugador',
+      position: room.players.size,
       hand: [],
       total: 0,
       isBust: false,
       isStand: false,
       isBlackjack: false,
-      bet: 100,
+      bet: 0,
       balance: 1000,
+      hasPlacedBet: false,
+      status: 'playing',
     };
     room.sockets.add(socket.id);
-    room.players.push(player);
+    room.players.set(socket.id, player);
     socket.join(code);
     socket.emit('roomJoined', code);
     emitPlayersUpdate(code);
@@ -180,7 +328,7 @@ io.on('connection', (socket: Socket) => {
     if (rooms.has(code)) {
       const room = rooms.get(code)!;
       room.sockets.delete(socket.id);
-      room.players = room.players.filter((p: Player) => p.id !== socket.id);
+      room.players.delete(socket.id);
       socket.leave(code);
       emitPlayersUpdate(code);
       if (room.sockets.size === 0) {
@@ -190,7 +338,7 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
-  // Iniciar partida (solo el creador puede)
+  // Iniciar partida (solo el creador puede) - ahora inicia fase de apuestas
   socket.on('startGameInRoom', (code: string) => {
     code = code.toUpperCase();
     const room = rooms.get(code);
@@ -199,46 +347,40 @@ io.on('connection', (socket: Socket) => {
       socket.emit('roomError', 'Solo el creador puede iniciar la partida');
       return;
     }
-    // Inicializar el estado del juego
-    const deck = createShuffledDeck();
-    const players = room.players.map((p: Player) => {
-      const hand = [deck.pop()!, deck.pop()!];
-      const handStatus = calculateHand(hand);
-      return {
-        ...p,
-        hand,
-        total: handStatus.total,
-        isBust: handStatus.isBust,
-        isBlackjack: handStatus.isBlackjack,
-        isStand: false,
-        bet: 100,
-        balance: p.balance - 100,
-      };
+    
+    // Inicializar fase de apuestas
+    room.bettingPhase = true;
+    room.playersReady.clear();
+    
+    // Reset player betting state
+    room.players.forEach(p => {
+      p.bet = 0;
+      p.hasPlacedBet = false;
+      p.hand = [];
+      p.total = 0;
+      p.isBust = false;
+      p.isStand = false;
+      p.isBlackjack = false;
+      p.status = 'playing';
     });
-    const dealerHand = [deck.pop()!, deck.pop()!];
-    const dealerStatus = calculateHand([dealerHand[0]]);
-    const dealer: Dealer = {
-      hand: [dealerHand[0]],
-      hiddenCard: dealerHand[1],
-      total: dealerStatus.total,
-      isBust: dealerStatus.isBust,
-      isBlackjack: false,
-    };
-    const gameState: GameState = {
+
+    const gameState: MultiplayerGameState = {
       started: true,
-      players,
-      dealer,
-      deck,
+      players: Array.from(room.players.values()),
+      dealer: { hand: [], total: 0, isBust: false, isBlackjack: false },
+      deck: [],
       turn: 0,
-      phase: 'playing',
+      phase: 'betting',
+      bettingComplete: false,
     };
+    
     room.gameState = gameState;
     io.to(code).emit('gameStarted', gameState);
     io.to(code).emit('gameStateUpdate', gameState);
-    console.log(`Partida iniciada en sala ${code}`);
+    console.log(`Fase de apuestas iniciada en sala ${code}`);
   });
 
-  // Reiniciar partida (next round, solo el creador)
+  // Reiniciar partida (next round, solo el creador) - ahora inicia nueva fase de apuestas
   socket.on('restartGameInRoom', (code: string) => {
     code = code.toUpperCase();
     const room = rooms.get(code);
@@ -247,43 +389,173 @@ io.on('connection', (socket: Socket) => {
       socket.emit('roomError', 'Solo el creador puede reiniciar la partida');
       return;
     }
-    // Reiniciar el estado del juego, manteniendo balances
-    const deck = createShuffledDeck();
-    const players = room.players.map((p: Player) => {
-      const hand = [deck.pop()!, deck.pop()!];
-      const handStatus = calculateHand(hand);
-      return {
-        ...p,
-        hand,
-        total: handStatus.total,
-        isBust: handStatus.isBust,
-        isBlackjack: handStatus.isBlackjack,
-        isStand: false,
-        bet: 100,
-        balance: p.balance - 100,
-      };
+    
+    // Process payouts from previous round if needed
+    if (room.gameState && room.gameState.results) {
+      room.players.forEach(p => {
+        const result = room.gameState!.results![p.id];
+        if (result) {
+          p.balance += result.payout;
+        }
+      });
+    }
+    
+    // Reset for new betting phase
+    room.bettingPhase = true;
+    room.playersReady.clear();
+    
+    room.players.forEach(p => {
+      p.bet = 0;
+      p.hasPlacedBet = false;
+      p.hand = [];
+      p.total = 0;
+      p.isBust = false;
+      p.isStand = false;
+      p.isBlackjack = false;
     });
-    const dealerHand = [deck.pop()!, deck.pop()!];
-    const dealerStatus = calculateHand([dealerHand[0]]);
-    const dealer: Dealer = {
-      hand: [dealerHand[0]],
-      hiddenCard: dealerHand[1],
-      total: dealerStatus.total,
-      isBust: dealerStatus.isBust,
-      isBlackjack: false,
-    };
-    const gameState: GameState = {
+
+    const gameState: MultiplayerGameState = {
       started: true,
-      players,
-      dealer,
-      deck,
+      players: Array.from(room.players.values()),
+      dealer: { hand: [], total: 0, isBust: false, isBlackjack: false },
+      deck: [],
       turn: 0,
-      phase: 'playing',
+      phase: 'betting',
+      bettingComplete: false,
     };
+    
     room.gameState = gameState;
     io.to(code).emit('gameStarted', gameState);
     io.to(code).emit('gameStateUpdate', gameState);
-    console.log(`Partida REINICIADA en sala ${code}`);
+    console.log(`Nueva ronda iniciada en sala ${code}`);
+  });
+
+  // Betting actions
+  socket.on('placeBet', ({ code, amount }: { code: string, amount: number }) => {
+    code = code.toUpperCase();
+    const room = rooms.get(code);
+    if (!room || !room.gameState || room.gameState.phase !== 'betting') return;
+    
+    const player = room.players.get(socket.id);
+    if (!player) return;
+    
+    // Validate bet amount using validation function
+    const validation = validateBet(player, amount);
+    if (!validation.valid) {
+      socket.emit('bettingError', validation.error);
+      return;
+    }
+    
+    // Update player bet
+    player.bet = amount;
+    player.hasPlacedBet = true;
+    player.balance -= amount;
+    
+    // Check if all players have placed valid bets
+    if (allPlayersHaveValidBets(room)) {
+      // Start dealing phase only when all players have valid bets
+      startDealingPhase(code);
+    } else {
+      // Update game state with current players
+      room.gameState.players = Array.from(room.players.values());
+      io.to(code).emit('gameStateUpdate', room.gameState);
+    }
+    
+    console.log(`Player ${socket.id} placed bet of ${amount} in room ${code}`);
+  });
+
+  socket.on('updateBet', ({ code, amount }: { code: string, amount: number }) => {
+    code = code.toUpperCase();
+    const room = rooms.get(code);
+    if (!room || !room.gameState || room.gameState.phase !== 'betting') return;
+    
+    const player = room.players.get(socket.id);
+    if (!player || player.hasPlacedBet) return;
+    
+    // Validate bet amount
+    if (amount < 0 || amount > player.balance + player.bet) {
+      socket.emit('bettingError', 'Invalid bet amount');
+      return;
+    }
+    
+    // Update player bet (restore previous bet to balance first)
+    player.balance += player.bet;
+    player.bet = amount;
+    player.balance -= amount;
+    
+    // Update game state with current players
+    room.gameState.players = Array.from(room.players.values());
+    io.to(code).emit('gameStateUpdate', room.gameState);
+  });
+
+  // Add chip to current bet
+  socket.on('addChip', ({ code, chipValue }: { code: string, chipValue: number }) => {
+    code = code.toUpperCase();
+    const room = rooms.get(code);
+    if (!room || !room.gameState || room.gameState.phase !== 'betting') return;
+    
+    const player = room.players.get(socket.id);
+    if (!player || player.hasPlacedBet) return;
+    
+    const newBetAmount = player.bet + chipValue;
+    
+    // Validate new bet amount
+    if (newBetAmount > player.balance + player.bet) {
+      socket.emit('bettingError', 'Insufficient balance for this bet');
+      return;
+    }
+    
+    // Update player bet
+    player.balance += player.bet; // Restore current bet to balance
+    player.bet = newBetAmount;
+    player.balance -= newBetAmount; // Deduct new bet amount
+    
+    // Update game state with current players
+    room.gameState.players = Array.from(room.players.values());
+    io.to(code).emit('gameStateUpdate', room.gameState);
+    
+    console.log(`Player ${socket.id} added chip ${chipValue} to bet, new bet: ${newBetAmount} in room ${code}`);
+  });
+
+  // All-in bet
+  socket.on('allIn', ({ code }: { code: string }) => {
+    code = code.toUpperCase();
+    const room = rooms.get(code);
+    if (!room || !room.gameState || room.gameState.phase !== 'betting') return;
+    
+    const player = room.players.get(socket.id);
+    if (!player || player.hasPlacedBet) return;
+    
+    // Set bet to entire available balance
+    const totalAvailable = player.balance + player.bet;
+    player.balance = 0;
+    player.bet = totalAvailable;
+    
+    // Update game state with current players
+    room.gameState.players = Array.from(room.players.values());
+    io.to(code).emit('gameStateUpdate', room.gameState);
+    
+    console.log(`Player ${socket.id} went all-in with ${totalAvailable} in room ${code}`);
+  });
+
+  // Clear current bet
+  socket.on('clearBet', ({ code }: { code: string }) => {
+    code = code.toUpperCase();
+    const room = rooms.get(code);
+    if (!room || !room.gameState || room.gameState.phase !== 'betting') return;
+    
+    const player = room.players.get(socket.id);
+    if (!player || player.hasPlacedBet) return;
+    
+    // Return bet to balance and clear bet
+    player.balance += player.bet;
+    player.bet = 0;
+    
+    // Update game state with current players
+    room.gameState.players = Array.from(room.players.values());
+    io.to(code).emit('gameStateUpdate', room.gameState);
+    
+    console.log(`Player ${socket.id} cleared bet in room ${code}`);
   });
 
   // Acciones de jugador: hit, stand
@@ -333,27 +605,44 @@ io.on('connection', (socket: Socket) => {
         gs.dealer.isBust = dealerStatus.isBust;
         gs.dealer.isBlackjack = dealerStatus.isBlackjack;
       }
-      // Calcular resultados
+      // Calcular resultados con payouts
       gs.phase = 'result';
       gs.results = {};
       for (const p of gs.players) {
+        let status: 'win' | 'lose' | 'draw' | 'bust' | 'blackjack';
+        let payout = 0;
+        
         if (p.isBust) {
-          gs.results[p.id] = 'bust';
+          status = 'bust';
+          payout = 0; // Lose bet
         } else if (p.isBlackjack && !gs.dealer.isBlackjack) {
-          gs.results[p.id] = 'blackjack';
+          status = 'blackjack';
+          payout = Math.floor(p.bet * 2.5); // 3:2 payout for blackjack
         } else if (!p.isBlackjack && gs.dealer.isBlackjack) {
-          gs.results[p.id] = 'lose';
-        } else if (p.total > 21) {
-          gs.results[p.id] = 'bust';
+          status = 'lose';
+          payout = 0; // Lose bet
         } else if (gs.dealer.isBust) {
-          gs.results[p.id] = 'win';
+          status = 'win';
+          payout = p.bet * 2; // Return bet + winnings
         } else if (p.total > gs.dealer.total) {
-          gs.results[p.id] = 'win';
+          status = 'win';
+          payout = p.bet * 2; // Return bet + winnings
         } else if (p.total < gs.dealer.total) {
-          gs.results[p.id] = 'lose';
+          status = 'lose';
+          payout = 0; // Lose bet
         } else {
-          gs.results[p.id] = 'draw';
+          status = 'draw';
+          payout = p.bet; // Return bet only
         }
+        
+        gs.results[p.id] = {
+          status,
+          payout,
+          finalBalance: p.balance + payout
+        };
+        
+        // Update player status for display
+        p.status = status === 'bust' ? 'bust' : status === 'blackjack' ? 'blackjack' : p.isStand ? 'stand' : 'playing';
       }
     } else {
       gs.turn = nextTurn;
@@ -364,7 +653,7 @@ io.on('connection', (socket: Socket) => {
   socket.on('disconnect', () => {
     for (const [code, room] of rooms.entries()) {
       room.sockets.delete(socket.id);
-      room.players = room.players.filter((p: Player) => p.id !== socket.id);
+      room.players.delete(socket.id);
       emitPlayersUpdate(code);
       if (room.sockets.size === 0) {
         rooms.delete(code);
@@ -375,6 +664,6 @@ io.on('connection', (socket: Socket) => {
   });
 });
 
-httpServer.listen(Number(PORT), HOST, () => {
-  console.log(`Server running (HTTP + WS) on http://${HOST}:${PORT}`);
+httpServer.listen(config.BACKEND_PORT, config.HOST, () => {
+  console.log(`Server running (HTTP + WS) on http://${config.HOST}:${config.BACKEND_PORT}`);
 }); 

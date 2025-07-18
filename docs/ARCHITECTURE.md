@@ -334,21 +334,126 @@ interface MultiplayerGameState {
 
 ## Deployment Architecture
 
+### Docker Containerization (Recommended)
+
+The application uses a single Docker container that runs both frontend and backend services together for simplified deployment and management.
+
+#### Container Architecture
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Docker Container                          │
+│  ┌─────────────────┐         ┌─────────────────────────────┐ │
+│  │   Frontend      │         │        Backend              │ │
+│  │   (React)       │◄────────┤   (Express + Socket.IO)    │ │
+│  │                 │         │                             │ │
+│  │ - Static Files  │         │ - API Endpoints             │ │
+│  │ - Served by     │         │ - WebSocket Server          │ │
+│  │   serve         │         │ - Game Logic                │ │
+│  └─────────────────┘         └─────────────────────────────┘ │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              Environment Configuration                   │ │
+│  │  - HOST/IP variables from .env                          │ │
+│  │  - Port mappings (5180, 5185)                          │ │
+│  │  - Service URLs                                         │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Multi-Stage Docker Build
+```dockerfile
+# Stage 1: Build Backend
+FROM node:18-alpine AS backend-builder
+# - Install dependencies
+# - Compile TypeScript to JavaScript
+
+# Stage 2: Build Frontend  
+FROM node:18-alpine AS frontend-builder
+# - Install dependencies
+# - Build production React app
+
+# Stage 3: Production Runtime
+FROM node:18-alpine AS production
+# - Copy built backend and frontend
+# - Install runtime dependencies (serve, concurrently)
+# - Configure health checks
+# - Start both services
+```
+
+#### Container Features
+- **Single Container**: Both services in one container for simplicity
+- **Health Checks**: Monitors both frontend and backend services
+- **Environment Variables**: Full .env file support
+- **Development Mode**: Hot reloading with volume mounting
+- **Production Mode**: Optimized builds with minimal container size
+
 ### Development Environment
+
+#### Manual Setup
 - **Frontend**: Vite dev server on port 5180
 - **Backend**: Express server on port 5185
-- **Host Configuration**: Configurable host binding (default: 172.16.50.34)
+- **Host Configuration**: Configurable host binding (default: localhost)
+
+#### Docker Development
+- **Container**: Single container with both services
+- **Hot Reloading**: Source code mounted as volumes
+- **Development Dependencies**: Full development toolchain included
+- **Automatic Restart**: File changes trigger service restarts
 
 ### Build Process
+
+#### Manual Build
 - **Frontend Build**: Vite production build with asset optimization
 - **Backend Build**: TypeScript compilation to JavaScript
 - **Environment Configuration**: Environment variable support
 
+#### Docker Build
+- **Multi-Stage Build**: Optimized container layers
+- **Dependency Caching**: Efficient Docker layer caching
+- **Production Optimization**: Minimal runtime dependencies
+- **Health Check Integration**: Built-in service monitoring
+
 ### Production Considerations
+
+#### Docker Production
+- **Container Orchestration**: Docker Compose for service management
+- **Environment Configuration**: Production-specific .env files
+- **Health Monitoring**: Automatic health checks and restarts
+- **Network Configuration**: Proper container networking setup
+- **Resource Limits**: CPU and memory constraints
+
+#### Traditional Deployment
 - **Process Management**: PM2 or similar process manager
 - **Reverse Proxy**: Nginx for static file serving and load balancing
 - **SSL/TLS**: HTTPS encryption for production deployment
 - **Database Integration**: Future database integration for persistent storage
+
+### Environment Configuration
+
+#### Docker Environment Variables
+```env
+# Network Configuration
+HOST=0.0.0.0              # Container networking
+BACKEND_PORT=5185         # Backend service port
+FRONTEND_PORT=5180        # Frontend service port
+
+# Environment
+NODE_ENV=production       # or development
+
+# CORS Configuration
+CORS_ORIGIN=*            # Adjust for production security
+
+# Frontend Variables (VITE_ prefix)
+VITE_HOST=0.0.0.0
+VITE_BACKEND_PORT=5185
+VITE_FRONTEND_PORT=5180
+```
+
+#### Container Networking
+- **Host Binding**: 0.0.0.0 for proper container networking
+- **Port Mapping**: Container ports mapped to host ports
+- **Service Discovery**: Services communicate via localhost within container
+- **External Access**: Host machine can access both services
 
 ## Testing Strategy
 

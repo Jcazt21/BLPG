@@ -1,0 +1,197 @@
+.betting-panel-component {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chips-label {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.chip-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.chip {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.chip:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.chip:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Chip colors based on value */
+.chip-25 {
+  background: #e57373;
+  color: #fff;
+}
+
+.chip-50 {
+  background: #90caf9;
+  color: #232b23;
+}
+
+.chip-100 {
+  background: #b6e2a1;
+  color: #232b23;
+}
+
+.chip-250 {
+  background: #ffd54f;
+  color: #232b23;
+}
+
+.chip-500 {
+  background: #ce93d8;
+  color: #fff;
+}
+
+.chip-1000 {
+  background: #ff8a65;
+  color: #fff;
+}
+
+.chip.all-in {
+  width: 100px;
+  height: 40px;
+  border-radius: 20px;
+  background: #ffd54f;
+  color: #232b23;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.bet-label {
+  color: #ffd54f;
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 1rem 0;
+}
+
+.betting-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.clear-bet-btn,
+.place-bet-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.clear-bet-btn {
+  background: #3b4cca;
+  color: #fff;
+}
+
+.clear-bet-btn:hover:not(:disabled) {
+  background: #2c3a9a;
+}
+
+.place-bet-btn {
+  background: #ffd54f;
+  color: #232b23;
+}
+
+.place-bet-btn:hover:not(:disabled) {
+  background: #e6c547;
+}
+
+.clear-bet-btn:disabled,
+.place-bet-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.no-chips-msg {
+  color: #e57373;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  font-weight: bold;
+}
+
+/* Responsive design */
+@media (max-width: 900px) {
+  .betting-panel-component {
+    padding: 0.5rem;
+  }
+  
+  .chip {
+    width: 50px;
+    height: 50px;
+    font-size: 0.8rem;
+  }
+  
+  .chip.all-in {
+    width: 80px;
+    height: 35px;
+    font-size: 0.8rem;
+  }
+  
+  .chips-label,
+  .bet-label {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .chip {
+    width: 40px;
+    height: 40px;
+    font-size: 0.7rem;
+  }
+  
+  .chip.all-in {
+    width: 70px;
+    height: 30px;
+    font-size: 0.7rem;
+  }
+  
+  .chips-label,
+  .bet-label {
+    font-size: 0.8rem;
+  }
+}

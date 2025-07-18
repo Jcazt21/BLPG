@@ -77,11 +77,32 @@ blackjack-game/
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js (v16 or higher)
+### Option 1: Docker (Recommended)
+
+**Prerequisites:**
+- Docker and Docker Compose
+
+**Setup:**
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd blackjack-game
+
+# 2. Start with Docker
+docker-compose up --build
+```
+
+**Access the Application:**
+- Frontend: http://localhost:5180
+- Backend API: http://localhost:5185
+
+### Option 2: Manual Setup
+
+**Prerequisites:**
+- Node.js (v18 or higher)
 - npm or yarn package manager
 
-### Installation & Setup
+**Setup:**
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
@@ -120,7 +141,7 @@ blackjack-game/
    ```
 
 6. **Access the Application**
-   - Frontend: http://localhost:5173
+   - Frontend: http://localhost:5180
    - Backend API: http://localhost:5185
 
 ## 📚 Documentation Navigation
