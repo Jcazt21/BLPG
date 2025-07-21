@@ -74,7 +74,7 @@ const CasinoTable = React.memo(function CasinoTable({ players = [], dealer = nul
 
       {/* Game phase indicator */}
       <div className="game-phase-indicator">
-        <span className="phase-text">
+        <span className={`phase-text ${gamePhase}`}>
           {gamePhaseText}
         </span>
       </div>

@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import './BettingPanel.css';
 
-const CHIP_VALUES = [25, 50, 100, 250, 500, 1000];
+const BASE_CHIP_VALUES = [25, 50, 100, 250, 500];
 
 const BettingPanel = React.memo(function BettingPanel({ 
   balance, 
@@ -33,37 +33,57 @@ const BettingPanel = React.memo(function BettingPanel({
     onPlaceBet();
   }, [onPlaceBet]);
 
+  // Generate dynamic chip values based on player's balance
+  const chipValues = useMemo(() => {
+    const availableBalance = balance + currentBet; // Total available funds
+    const dynamicChips = [...BASE_CHIP_VALUES];
+    
+    // Add a chip for the player's current balance if it's different from base values
+    if (availableBalance > 500 && !BASE_CHIP_VALUES.includes(availableBalance)) {
+      // Round down to nearest 25 for cleaner display
+      const balanceChip = Math.floor(availableBalance / 25) * 25;
+      if (balanceChip > 500 && balanceChip <= availableBalance) {
+        dynamicChips.push(balanceChip);
+      }
+    }
+    
+    // Sort chips in ascending order
+    return dynamicChips.sort((a, b) => a - b);
+  }, [balance, currentBet]);
+
   // Memoize chip buttons to prevent unnecessary re-renders
   const chipButtons = useMemo(() => {
-    return CHIP_VALUES.map((value) => (
+    return chipValues.map((value) => (
       <button
         key={value}
-        className={`chip chip-${value}`}
-        disabled={disabled || currentBet + value > balance}
+        className={`chip chip-${value >= 1000 ? '1000' : value}`}
+        disabled={disabled || currentBet + value > balance + currentBet}
         onClick={() => handleChipClick(value)}
       >
         {value}
       </button>
     ));
-  }, [disabled, currentBet, balance, handleChipClick]);
+  }, [chipValues, disabled, currentBet, balance, handleChipClick]);
 
   return (
     <div className="betting-panel-component">
-      <div className="chips-label">CHIPS: {balance}</div>
-      
-      <div className="chip-buttons">
-        {chipButtons}
-        
-        <button 
-          className="chip all-in" 
-          disabled={disabled || balance === 0} 
-          onClick={handleAllIn}
-        >
-          ALL IN
-        </button>
+      <div className="chips-section">
+        <div className="chips-label">CHIPS: {balance}</div>
+        <div className="chip-buttons">
+          {chipButtons}
+          <button 
+            className="chip all-in" 
+            disabled={disabled || balance === 0} 
+            onClick={handleAllIn}
+          >
+            ALL IN
+          </button>
+        </div>
       </div>
 
-      <div className="bet-label">BET: {currentBet}</div>
+      <div className="bet-section">
+        <div className="bet-label">BET: {currentBet}</div>
+      </div>
       
       <div className="betting-controls">
         <button

@@ -85,12 +85,12 @@ function App() {
         setRoomCode(code);
         setJoinedRoom(code);
         setRoomError('');
-        
+
       });
       socket.on('roomJoined', code => {
         setJoinedRoom(code);
         setRoomError('');
-        
+
       });
       socket.on('roomError', msg => {
         setRoomError(msg);
@@ -109,6 +109,7 @@ function App() {
         // Update player's balance and bet from game state
         const myPlayer = state.players?.find(p => p.id === socketId);
         if (myPlayer) {
+          console.log('Updating balance from', multiBalance, 'to', myPlayer.balance);
           setMultiBalance(myPlayer.balance);
           setMultiBet(myPlayer.bet);
         }
@@ -263,10 +264,10 @@ function App() {
     if (multiGameState?.phase !== 'betting') return;
     const myPlayer = multiGameState.players?.find(p => p.id === socketId);
     if (!myPlayer || myPlayer.hasPlacedBet) return;
-    
+
     const newBet = multiBet + value;
     if (newBet > multiBalance + multiBet) return; // Can't exceed available balance
-    
+
     setMultiBet(newBet);
     socket.emit('updateBet', { code: joinedRoom, amount: newBet });
   };
@@ -275,7 +276,7 @@ function App() {
     if (multiGameState?.phase !== 'betting') return;
     const myPlayer = multiGameState.players?.find(p => p.id === socketId);
     if (!myPlayer || myPlayer.hasPlacedBet) return;
-    
+
     const allInAmount = multiBalance + multiBet;
     setMultiBet(allInAmount);
     socket.emit('updateBet', { code: joinedRoom, amount: allInAmount });
@@ -285,7 +286,7 @@ function App() {
     if (multiGameState?.phase !== 'betting') return;
     const myPlayer = multiGameState.players?.find(p => p.id === socketId);
     if (!myPlayer || myPlayer.hasPlacedBet) return;
-    
+
     setMultiBet(0);
     socket.emit('updateBet', { code: joinedRoom, amount: 0 });
   };
@@ -294,7 +295,7 @@ function App() {
     if (multiGameState?.phase !== 'betting' || multiBet <= 0) return;
     const myPlayer = multiGameState.players?.find(p => p.id === socketId);
     if (!myPlayer || myPlayer.hasPlacedBet) return;
-    
+
     socket.emit('placeBet', { code: joinedRoom, amount: multiBet });
     setBettingError('');
   };
@@ -410,7 +411,7 @@ function App() {
                 placeholder="Código de sala"
                 value={roomInput}
                 onChange={e => setRoomInput(e.target.value.toUpperCase())}
-                maxLength={6}
+                maxLength={4}
                 style={{ textTransform: 'uppercase' }}
               />
               <button className="mode-btn" onClick={() => {
@@ -433,34 +434,36 @@ function App() {
     } else {
       if (status !== 'multi-started') {
         return (
-          <div className="main-layout">
-            <div className="center-panel">
+          <div className="lobby-layout">
+            <div className="lobby-content">
               <img src={logo} alt="Logo" className="logo" />
               <h2>Sala: <span style={{ color: '#ffd54f' }}>{joinedRoom}</span></h2>
               <p>Comparte este código para que otros se unan.</p>
               <h3>Jugadores en la sala:</h3>
-              <ul style={{ listStyle: 'none', padding: 0 }}>
+              <ul className="players-list">
                 {players.map(p => (
-                  <li key={p.id} style={{ fontWeight: p.id === socket.id ? 'bold' : 'normal' }}>
+                  <li key={p.id} className={p.id === socket.id ? 'current-player' : ''}>
                     {p.name} {p.id === socket.id ? '(Tú)' : ''} {isCreator && p.id === socket.id ? '(Creador)' : ''}
                   </li>
                 ))}
               </ul>
-              {isCreator && (
-                <button className="mode-btn" onClick={() => socket.emit('startGameInRoom', joinedRoom)}>
-                  Iniciar partida
-                </button>
-              )}
-              <button className="mode-btn" onClick={() => {
-                setJoinedRoom(null);
-                setRoomCode('');
-                setRoomInput('');
-                setRoomError('');
-                setPlayers([]);
-                setCreatorId(null);
-                socket.emit('leaveRoom', joinedRoom);
-              }}>Salir de la sala</button>
-              <button className="mode-btn" onClick={() => setMode(null)}>Volver</button>
+              <div className="lobby-buttons">
+                {isCreator && (
+                  <button className="mode-btn" onClick={() => socket.emit('startGameInRoom', joinedRoom)}>
+                    Iniciar partida
+                  </button>
+                )}
+                <button className="mode-btn" onClick={() => {
+                  setJoinedRoom(null);
+                  setRoomCode('');
+                  setRoomInput('');
+                  setRoomError('');
+                  setPlayers([]);
+                  setCreatorId(null);
+                  socket.emit('leaveRoom', joinedRoom);
+                }}>Salir de la sala</button>
+                <button className="mode-btn" onClick={() => setMode(null)}>Volver</button>
+              </div>
             </div>
           </div>
         );
@@ -470,7 +473,7 @@ function App() {
           const isMyTurn = gs.phase === 'playing' && gs.players[gs.turn]?.id === socketId;
           const isResult = gs.phase === 'result';
           const myPlayer = gs.players.find(p => p.id === socketId);
-          
+
           // Transform game state data for CasinoTable component
           const casinoPlayers = gs.players.map((p, idx) => ({
             id: p.id,
@@ -501,7 +504,7 @@ function App() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="casino-controls">
                   {/* Control buttons */}
                   <div className="control-buttons">
@@ -514,7 +517,7 @@ function App() {
                         Next Round
                       </button>
                     )}
-                    
+
                     <button className="control-btn leave-btn" onClick={() => {
                       setJoinedRoom(null);
                       setRoomCode('');
@@ -527,7 +530,7 @@ function App() {
                     }}>
                       Leave
                     </button>
-                    
+
                     <button className="control-btn menu-btn" onClick={() => setMode(null)}>
                       Menu
                     </button>
@@ -575,14 +578,14 @@ function App() {
                 {/* Action buttons for current player */}
                 {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && (
                   <div className="action-buttons">
-                    <button 
-                      className="action-btn hit-btn" 
+                    <button
+                      className="action-btn hit-btn"
                       onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'hit' })}
                     >
                       Hit
                     </button>
-                    <button 
-                      className="action-btn stand-btn" 
+                    <button
+                      className="action-btn stand-btn"
                       onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'stand' })}
                     >
                       Stand
@@ -610,7 +613,7 @@ function App() {
                     <span>Round Complete - </span>
                     {gs.players.map((p, idx) => (
                       <span key={p.id} style={{ marginRight: '1rem' }}>
-                        {p.name}: {gs.results && gs.results[p.id] ? gs.results[p.id].status : 'unknown'} 
+                        {p.name}: {gs.results && gs.results[p.id] ? gs.results[p.id].status : 'unknown'}
                         {gs.results && gs.results[p.id] && gs.results[p.id].payout > 0 && ` (+${gs.results[p.id].payout})`}
                         {idx < gs.players.length - 1 ? ' | ' : ''}
                       </span>

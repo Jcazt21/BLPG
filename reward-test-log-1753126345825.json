@@ -1,0 +1,460 @@
+{
+  "timestamp": "2025-07-21T19:32:25.825Z",
+  "rewardIssues": [],
+  "playerTracking": [
+    {
+      "name": "RewardPlayer1",
+      "balanceTracking": {
+        "initial": 1000,
+        "current": 850,
+        "bet": 150,
+        "expectedAfterBet": 850,
+        "expectedAfterResult": 850,
+        "actualAfterResult": 850,
+        "rewardReceived": 0,
+        "rewardExpected": 0
+      }
+    },
+    {
+      "name": "RewardPlayer2",
+      "balanceTracking": {
+        "initial": 1000,
+        "current": 1450,
+        "bet": 300,
+        "expectedAfterBet": 700,
+        "expectedAfterResult": 1450,
+        "actualAfterResult": 1450,
+        "rewardReceived": 750,
+        "rewardExpected": 750
+      }
+    }
+  ],
+  "detailedLogs": [
+    {
+      "timestamp": "2025-07-21T19:32:14.455Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "🎯 Starting Reward Tracking Test 🎯"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.492Z",
+      "type": "INFO",
+      "playerId": "RewardPlayer1",
+      "message": "Socket connected: bZ4YG5jVHXaPiq3FAAAK"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.496Z",
+      "type": "INFO",
+      "playerId": "RewardPlayer2",
+      "message": "Socket connected: PZvUtqVaHx2p44v8AAAL"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.523Z",
+      "type": "SUCCESS",
+      "playerId": "RewardPlayer1",
+      "message": "Connected successfully"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.524Z",
+      "type": "SUCCESS",
+      "playerId": "RewardPlayer2",
+      "message": "Connected successfully"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.524Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "Creating room..."
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.527Z",
+      "type": "SUCCESS",
+      "playerId": "RewardPlayer1",
+      "message": "Room created: B6B2"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.638Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "Room B6B2 created successfully"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.639Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "All players joining room..."
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.641Z",
+      "type": "SUCCESS",
+      "playerId": "RewardPlayer2",
+      "message": "Joined room: B6B2"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:14.642Z",
+      "type": "SUCCESS",
+      "playerId": "RewardPlayer1",
+      "message": "Joined room: B6B2"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.153Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "All players joined room"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.154Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "Starting game..."
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.158Z",
+      "type": "INFO",
+      "playerId": "RewardPlayer1",
+      "message": "Game started - Phase: betting"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.159Z",
+      "type": "BALANCE",
+      "playerId": "RewardPlayer1",
+      "message": "Initial balance set to: 1000"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.162Z",
+      "type": "INFO",
+      "playerId": "RewardPlayer2",
+      "message": "Game started - Phase: betting"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.162Z",
+      "type": "BALANCE",
+      "playerId": "RewardPlayer2",
+      "message": "Initial balance set to: 1000"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.256Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "Game started - Betting phase active"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.256Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== PLACING BETS ==="
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.256Z",
+      "type": "INFO",
+      "playerId": "RewardPlayer1",
+      "message": "Placing bet: 150"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.257Z",
+      "type": "BALANCE",
+      "playerId": "RewardPlayer1",
+      "message": "BALANCE UPDATE: Balance: 850 (-150), Bet: 150 (+150), Phase: betting"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:15.258Z",
+      "type": "BALANCE",
+      "playerId": "RewardPlayer1",
+      "message": "BET PLACED: Expected balance after bet: 850, Actual: 850"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:16.772Z",
+      "type": "INFO",
+      "playerId": "RewardPlayer2",
+      "message": "Placing bet: 300"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:16.774Z",
+      "type": "BALANCE",
+      "playerId": "RewardPlayer2",
+      "message": "BALANCE UPDATE: Balance: 700 (-300), Bet: 300 (+300), Phase: betting"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:16.775Z",
+      "type": "BALANCE",
+      "playerId": "RewardPlayer2",
+      "message": "BET PLACED: Expected balance after bet: 700, Actual: 700"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:18.276Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== BETS PLACED ==="
+    },
+    {
+      "timestamp": "2025-07-21T19:32:18.276Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== SIMULATING GAMEPLAY ==="
+    },
+    {
+      "timestamp": "2025-07-21T19:32:18.276Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "Cards being dealt..."
+    },
+    {
+      "timestamp": "2025-07-21T19:32:19.299Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "Playing phase started"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:19.299Z",
+      "type": "INFO",
+      "playerId": "RewardPlayer1",
+      "message": "Taking action: hit"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:20.804Z",
+      "type": "INFO",
+      "playerId": "RewardPlayer2",
+      "message": "Taking action: stand"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.308Z",
+      "type": "INFO",
+      "playerId": "RewardPlayer1",
+      "message": "Taking action: hit"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.310Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer1",
+      "message": "🎯 GAME RESULT: bust"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.311Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer1",
+      "message": "💰 PAYOUT INFO: Bet: 150, Payout: 0, Final Balance: 850"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.311Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer1",
+      "message": "📊 REWARD ANALYSIS:"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.312Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer1",
+      "message": "   Expected Payout: 0"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.312Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer1",
+      "message": "   Actual Payout: 0"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.313Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer1",
+      "message": "   Expected Final Balance: 850"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.313Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer1",
+      "message": "   Actual Final Balance: 850"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.314Z",
+      "type": "SUCCESS",
+      "playerId": "RewardPlayer1",
+      "message": "✅ REWARD SYSTEM WORKING CORRECTLY"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.315Z",
+      "type": "BALANCE",
+      "playerId": "RewardPlayer2",
+      "message": "BALANCE UPDATE: Balance: 1450 (+750), Bet: 300 (+0), Phase: result"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.315Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer2",
+      "message": "🎯 GAME RESULT: blackjack"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.316Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer2",
+      "message": "💰 PAYOUT INFO: Bet: 300, Payout: 750, Final Balance: 1450"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.316Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer2",
+      "message": "📊 REWARD ANALYSIS:"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.317Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer2",
+      "message": "   Expected Payout: 750"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.317Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer2",
+      "message": "   Actual Payout: 750"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.318Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer2",
+      "message": "   Expected Final Balance: 1450"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.318Z",
+      "type": "REWARD",
+      "playerId": "RewardPlayer2",
+      "message": "   Actual Final Balance: 1450"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:22.319Z",
+      "type": "SUCCESS",
+      "playerId": "RewardPlayer2",
+      "message": "✅ REWARD SYSTEM WORKING CORRECTLY"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:23.813Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== GAMEPLAY COMPLETE ==="
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.822Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "\n🎯 === REWARD TRACKING REPORT === 🎯"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.822Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "\n📊 PLAYER REWARD ANALYSIS:"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.822Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "\n--- RewardPlayer1 ---"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.822Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Initial Balance: 1000"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.822Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Bet Amount: 150"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.822Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Balance After Bet: 850 (Expected: 850)"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.823Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Expected Reward: 0"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.823Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Actual Reward: 0"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.823Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Final Balance: 850 (Expected: 850)"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.823Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "  Status: ✅ WORKING CORRECTLY"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.823Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "\n--- RewardPlayer2 ---"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.823Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Initial Balance: 1000"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.823Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Bet Amount: 300"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.824Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Balance After Bet: 1450 (Expected: 700)"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.824Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Expected Reward: 750"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.824Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Actual Reward: 750"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.824Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Final Balance: 1450 (Expected: 1450)"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.824Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "  Status: ✅ WORKING CORRECTLY"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.824Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "\n🔍 ISSUES SUMMARY:"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.824Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  Total Issues Found: 0"
+    },
+    {
+      "timestamp": "2025-07-21T19:32:25.824Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "  🎉 NO ISSUES FOUND! Reward system is working perfectly."
+    }
+  ]
+}

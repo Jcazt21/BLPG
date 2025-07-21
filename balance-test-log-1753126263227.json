@@ -1,0 +1,641 @@
+{
+  "timestamp": "2025-07-21T19:31:03.227Z",
+  "testResults": [
+    {
+      "round": 1,
+      "players": [
+        {
+          "name": "Player1",
+          "socketId": "TROxNBr3jtRUCqJ-AAAG",
+          "preBetBalance": 900,
+          "preResultBalance": 900,
+          "betAmount": 100,
+          "gameResult": "bust",
+          "expectedPayout": 0,
+          "actualPayout": 0,
+          "expectedFinalBalance": 900,
+          "actualFinalBalance": 900,
+          "balanceHistory": [
+            {
+              "action": "initial",
+              "balance": 1000,
+              "bet": 0,
+              "timestamp": 1753126254292
+            },
+            {
+              "action": "phase_betting",
+              "balance": 900,
+              "bet": 100,
+              "balanceChange": -100,
+              "betChange": 100,
+              "phase": "betting",
+              "timestamp": 1753126255089
+            }
+          ]
+        },
+        {
+          "name": "Player2",
+          "socketId": "_gukKimce7MgCi_PAAAH",
+          "preBetBalance": 800,
+          "preResultBalance": 800,
+          "betAmount": 200,
+          "gameResult": "lose",
+          "expectedPayout": 0,
+          "actualPayout": 0,
+          "expectedFinalBalance": 800,
+          "actualFinalBalance": 800,
+          "balanceHistory": [
+            {
+              "action": "initial",
+              "balance": 1000,
+              "bet": 0,
+              "timestamp": 1753126254298
+            },
+            {
+              "action": "phase_betting",
+              "balance": 800,
+              "bet": 200,
+              "balanceChange": -200,
+              "betChange": 200,
+              "phase": "betting",
+              "timestamp": 1753126256607
+            }
+          ]
+        }
+      ],
+      "issues": []
+    }
+  ],
+  "detailedLogs": [
+    {
+      "timestamp": "2025-07-21T19:30:54.291Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "🎮 Starting Robust Multiplayer Balance Test 🎮",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.291Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "Creating players...",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.323Z",
+      "type": "INFO",
+      "playerId": "Player1",
+      "message": "Socket connected: TROxNBr3jtRUCqJ-AAAG",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.326Z",
+      "type": "INFO",
+      "playerId": "Player2",
+      "message": "Socket connected: _gukKimce7MgCi_PAAAH",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.363Z",
+      "type": "SUCCESS",
+      "playerId": "Player1",
+      "message": "Connected successfully",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.364Z",
+      "type": "SUCCESS",
+      "playerId": "Player2",
+      "message": "Connected successfully",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.364Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "Creating room...",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.366Z",
+      "type": "SUCCESS",
+      "playerId": "Player1",
+      "message": "Room created: 6DKD",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.468Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "Room 6DKD created successfully",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.468Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "All players joining room...",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.470Z",
+      "type": "SUCCESS",
+      "playerId": "Player2",
+      "message": "Joined room: 6DKD",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.471Z",
+      "type": "SUCCESS",
+      "playerId": "Player1",
+      "message": "Joined room: 6DKD",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.972Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "All players joined room",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.973Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "Starting game...",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.975Z",
+      "type": "INFO",
+      "playerId": "Player1",
+      "message": "Game started - Phase: betting",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:54.976Z",
+      "type": "INFO",
+      "playerId": "Player2",
+      "message": "Game started - Phase: betting",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:55.087Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "Game started - Betting phase active",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:55.087Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "\n=== Testing Scenario: Simple Balance Test ===",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:55.088Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== BETTING PHASE START ===",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:55.088Z",
+      "type": "INFO",
+      "playerId": "Player1",
+      "message": "Placing bet: 100",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:55.090Z",
+      "type": "BALANCE",
+      "playerId": "Player1",
+      "message": "Balance Update - Balance: 900 (-100), Bet: 100 (+100), Phase: betting",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:56.605Z",
+      "type": "INFO",
+      "playerId": "Player2",
+      "message": "Placing bet: 200",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:56.608Z",
+      "type": "BALANCE",
+      "playerId": "Player2",
+      "message": "Balance Update - Balance: 800 (-200), Bet: 200 (+200), Phase: betting",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:58.136Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== BETTING PHASE COMPLETE ===",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:58.137Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== GAMEPLAY PHASE START ===",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:58.137Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "Cards being dealt...",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:59.205Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "Playing phase started",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:30:59.206Z",
+      "type": "INFO",
+      "playerId": "Player1",
+      "message": "Taking action: hit",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:01.209Z",
+      "type": "INFO",
+      "playerId": "Player2",
+      "message": "Taking action: stand",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:01.211Z",
+      "type": "PAYOUT",
+      "playerId": "Player1",
+      "message": "RESULT: bust | Bet: 100 | Payout: 0 | Final Balance: 900",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:01.212Z",
+      "type": "PAYOUT",
+      "playerId": "Player2",
+      "message": "RESULT: lose | Bet: 200 | Payout: 0 | Final Balance: 800",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.217Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== GAMEPLAY PHASE COMPLETE ===",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.218Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== RESULT ANALYSIS START ===",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.219Z",
+      "type": "SUCCESS",
+      "playerId": "Player1",
+      "message": "ANALYSIS: bust | Bet: 100 | Payout: 0/0 | Balance: 900/900",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.219Z",
+      "type": "SUCCESS",
+      "playerId": "Player2",
+      "message": "ANALYSIS: lose | Bet: 200 | Payout: 0/0 | Balance: 800/800",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.220Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "=== RESULT ANALYSIS COMPLETE ===",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.221Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "\n📊 === DETAILED BALANCE TEST REPORT === 📊",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.221Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "\n--- Round 1 Results ---",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.222Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  ✅ Player1: bust | Bet: 100 | Payout: 0 | Balance: 900",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.222Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "  ✅ Player2: lose | Bet: 200 | Payout: 0 | Balance: 800",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.223Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "\n📈 SUMMARY:",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.224Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "   Total Players Tested: 2",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.224Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "   Total Bets Placed: 300 chips",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.225Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "   Expected Payouts: 0 chips",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.225Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "   Actual Payouts: 0 chips",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.226Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "   Payout Accuracy: ✅ Perfect",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.226Z",
+      "type": "INFO",
+      "playerId": null,
+      "message": "   Total Issues Found: 0",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    },
+    {
+      "timestamp": "2025-07-21T19:31:03.227Z",
+      "type": "SUCCESS",
+      "playerId": null,
+      "message": "\n🎉 ALL BALANCE TESTS PASSED! No issues found with payouts or balance tracking.",
+      "test": {
+        "name": "Robust Balance Test",
+        "currentRound": 1,
+        "scenario": "Simple Balance Test"
+      }
+    }
+  ],
+  "playerBalanceHistories": [
+    {
+      "name": "Player1",
+      "balanceHistory": [
+        {
+          "action": "initial",
+          "balance": 1000,
+          "bet": 0,
+          "timestamp": 1753126254292
+        },
+        {
+          "action": "phase_betting",
+          "balance": 900,
+          "bet": 100,
+          "balanceChange": -100,
+          "betChange": 100,
+          "phase": "betting",
+          "timestamp": 1753126255089
+        }
+      ]
+    },
+    {
+      "name": "Player2",
+      "balanceHistory": [
+        {
+          "action": "initial",
+          "balance": 1000,
+          "bet": 0,
+          "timestamp": 1753126254298
+        },
+        {
+          "action": "phase_betting",
+          "balance": 800,
+          "bet": 200,
+          "balanceChange": -200,
+          "betChange": 200,
+          "phase": "betting",
+          "timestamp": 1753126256607
+        }
+      ]
+    }
+  ]
+}

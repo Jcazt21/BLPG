@@ -9,11 +9,12 @@ services:
         - VITE_FRONTEND_PORT=${VITE_FRONTEND_PORT}
     container_name: BLPG
     ports:
-      - "${HOST}:${FRONTEND_PORT}:${FRONTEND_PORT}"
-      - "${HOST}:${BACKEND_PORT}:${BACKEND_PORT}"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     environment:
       # Network Configuration
-      - HOST=${HOST}
+      - HOST=${DOCKER_HOST:-0.0.0.0}
+      - PUBLIC_HOST=${HOST}
       - BACKEND_PORT=${BACKEND_PORT}
       - FRONTEND_PORT=${FRONTEND_PORT}
       
