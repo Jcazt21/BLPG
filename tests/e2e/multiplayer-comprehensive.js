@@ -129,10 +129,15 @@ class MultiplayerTester {
   }
 
   async connectPlayer(player) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error(`Connection timeout for ${player.name}`));
+      }, 5000);
+      
       player.socket.connect();
       const checkConnection = () => {
         if (player.connected) {
+          clearTimeout(timeout);
           resolve();
         } else {
           setTimeout(checkConnection, 100);

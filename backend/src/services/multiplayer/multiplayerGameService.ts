@@ -3,6 +3,7 @@ import { Card } from '../../types/gameTypes';
 import { DealingService } from '../game/dealingService';
 import { GameLogic } from '../game/gameLogic';
 import { validateBet } from '../../utils/validationUtils';
+import { calculateHand } from '../../utils/cardUtils';
 
 /**
  * Service for managing multiplayer game state
@@ -123,7 +124,7 @@ export class MultiplayerGameService {
    * Calculates the dealer's hand total
    */
   private calculateDealerTotal(hand: Card[]): number {
-    return GameLogic.calculateHand(hand).total;
+    return calculateHand(hand).total;
   }
   
   /**
