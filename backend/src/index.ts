@@ -535,8 +535,23 @@ io.on('connection', (socket: Socket) => {
     room.bettingPhase = true;
     room.playersReady.clear();
     
+    // Store current balances from previous round results
+    const currentBalances = new Map<string, number>();
+    
+    if (room.gameState && room.gameState.results) {
+      // Get final balances from results
+      Object.entries(room.gameState.results).forEach(([playerId, result]) => {
+        currentBalances.set(playerId, result.finalBalance);
+      });
+    } else {
+      // If no results (first game or error), use current player balances
+      room.players.forEach((p, id) => {
+        currentBalances.set(id, p.balance);
+      });
+    }
+    
     room.players.forEach(p => {
-      // Reset bet to 0 for new round (balance should already include payout from previous round)
+      // Reset bet to 0 for new round
       p.bet = 0;
       p.hasPlacedBet = false;
       p.hand = [];
@@ -545,6 +560,11 @@ io.on('connection', (socket: Socket) => {
       p.isStand = false;
       p.isBlackjack = false;
       p.status = 'playing';
+      
+      // Apply the correct balance from previous round
+      if (currentBalances.has(p.id)) {
+        p.balance = currentBalances.get(p.id)!;
+      }
     });
 
     const gameState: MultiplayerGameState = {
@@ -560,7 +580,7 @@ io.on('connection', (socket: Socket) => {
     room.gameState = gameState;
     io.to(code).emit('gameStarted', gameState);
     broadcastGameState(code, gameState);
-    console.log(`Nueva ronda iniciada en sala ${code}`);
+    console.log(`Nueva ronda iniciada en sala ${code} con balances preservados`);
   });
 
   // Betting actions

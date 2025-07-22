@@ -5,24 +5,28 @@ const path = require('path');
 
 const TESTS = {
   unit: {
-    file: 'test-unit.js',
+    file: 'tests/unit/unit.js',
     description: 'Unit tests for individual functions'
   },
   balance: {
-    file: 'test-balance-validation.js',
+    file: 'tests/integration/balance-validation.js',
     description: 'Basic balance and betting validation tests'
   },
   'balance-comprehensive': {
-    file: 'test-balance-comprehensive.js',
+    file: 'tests/integration/balance-comprehensive.js',
     description: 'Comprehensive balance testing with edge cases'
   },
   quick: {
-    file: 'test-quick.js',
+    file: 'tests/integration/quick.js',
     description: 'Quick smoke test for basic functionality'
   },
   comprehensive: {
-    file: 'test-multiplayer-comprehensive.js',
+    file: 'tests/e2e/multiplayer-comprehensive.js',
     description: 'Full multiplayer game simulation tests'
+  },
+  'performance': {
+    file: 'tests/performance/multiplayer-balance-robust.js',
+    description: 'Performance tests for multiplayer balance'
   },
   all: {
     description: 'Run all tests sequentially'
@@ -73,9 +77,19 @@ async function runAllTests() {
   console.log('\n🎯 Running all tests sequentially...\n');
   
   try {
-    await runTest('test-balance-validation.js');
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Pause between tests
-    await runTest('test-multiplayer-comprehensive.js');
+    // Run unit tests first
+    await runTest('tests/unit/unit.js');
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Pause between tests
+    
+    // Run integration tests
+    await runTest('tests/integration/balance-validation.js');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await runTest('tests/integration/quick.js');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Run e2e tests
+    await runTest('tests/e2e/multiplayer-comprehensive.js');
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     console.log('🎉 All tests completed successfully! 🎉');
   } catch (error) {
