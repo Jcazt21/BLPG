@@ -43,4 +43,43 @@ export interface GameState {
   canDoubleDown?: boolean;
   splitHands?: Hand[];
   canSplit?: boolean;
-} 
+}
+
+// Crazy 8 Game Types
+export interface Crazy8Player {
+  id: string;
+  name: string;
+  hand: Card[];
+  cardCount: number; // For other players (to hide actual cards)
+  isCurrentTurn: boolean;
+  hasWon: boolean;
+  score: number;
+  isConnected: boolean;
+}
+
+export type Crazy8GamePhase = 'waiting' | 'playing' | 'suit-selection' | 'finished';
+
+export interface Crazy8GameState {
+  players: Crazy8Player[];
+  currentPlayerIndex: number;
+  direction: 1 | -1; // For future expansion (reverse direction)
+  discardPile: Card[];
+  topCard: Card;
+  activeSuit: Suit;
+  deckCount: number;
+  phase: Crazy8GamePhase;
+  winner?: string;
+  scores?: ScoreResult[];
+  gameType: 'crazy8';
+  maxPlayers: number;
+  minPlayers: number;
+}
+
+export interface ScoreResult {
+  playerId: string;
+  playerName: string;
+  remainingCards: number;
+  points: number;
+}
+
+export type GameType = 'blackjack' | 'crazy8'; 

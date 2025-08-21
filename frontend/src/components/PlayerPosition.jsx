@@ -30,11 +30,11 @@ const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTur
   // Memoize expensive calculations
   const statusIcon = useMemo(() => getStatusIcon(player.status), [player.status, getStatusIcon]);
   const statusColor = useMemo(() => getStatusColor(player.status), [player.status, getStatusColor]);
-  
+
   // Memoize card rendering to prevent unnecessary re-renders
   const renderedCards = useMemo(() => {
     if (!showCards || !player.cards || player.cards.length === 0) return null;
-    
+
     return player.cards.map((card, idx) => (
       <PlayingCard
         key={`${card.value}-${card.suit}-${idx}`}
@@ -51,8 +51,9 @@ const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTur
       {/* Player info header */}
       <div className="player-info">
         <div className="player-name">{player.name}</div>
-        <div className="player-bet">Bet: {player.bet || 0}</div>
-        <div className="player-balance">Balance: {player.balance || 0}</div>
+        {/* BETTING SYSTEM - TEMPORARILY DISABLED */}
+        {/* <div className="player-bet">Bet: {player.bet || 0}</div>
+        <div className="player-balance">Balance: {player.balance || 0}</div> */}
       </div>
 
       {/* Player cards */}
@@ -71,7 +72,7 @@ const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTur
 
       {/* Player status */}
       {player.status && player.status !== 'playing' && (
-        <div 
+        <div
           className="player-status"
           style={{ color: statusColor }}
         >

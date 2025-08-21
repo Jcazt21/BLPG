@@ -1,17 +1,18 @@
 import { Socket } from 'socket.io';
 import { generateRoomCode } from '../../utils/roomUtils';
-import { RoomModel } from '../../models/roomModel';
+import { RoomModel, Room, Crazy8Room, BlackjackRoom } from '../../models/roomModel';
+import { GameType } from '../../types/gameTypes';
 
 /**
  * Service for managing multiplayer rooms
  */
 export class RoomService {
-  private rooms: Map<string, RoomModel> = new Map();
+  private rooms: Map<string, Room> = new Map();
   
   /**
-   * Creates a new room
+   * Creates a new room with specified game type
    */
-  createRoom(creatorId: string): string {
+  createRoom(creatorId: string, gameType: GameType = 'blackjack'): string {
     let code: string;
     
     // Generate a unique room code
@@ -19,15 +20,36 @@ export class RoomService {
       code = generateRoomCode();
     } while (this.rooms.has(code));
     
-    // Create the room
-    const room: RoomModel = {
-      code,
-      creatorId,
-      playerIds: [creatorId],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      isActive: true
-    };
+    // Create the room based on game type
+    let room: Room;
+    
+    if (gameType === 'crazy8') {
+      room = {
+        code,
+        creatorId,
+        playerIds: [creatorId],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isActive: true,
+        gameType: 'crazy8',
+        gameState: null,
+        maxPlayers: 6,
+        minPlayers: 2
+      } as Crazy8Room;
+    } else {
+      room = {
+        code,
+        creatorId,
+        playerIds: [creatorId],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isActive: true,
+        gameType: 'blackjack',
+        gameState: null,
+        maxPlayers: 4,
+        minPlayers: 1
+      } as BlackjackRoom;
+    }
     
     this.rooms.set(code, room);
     return code;
@@ -45,6 +67,11 @@ export class RoomService {
     
     if (room.playerIds.includes(playerId)) {
       return true; // Player already in room
+    }
+    
+    // Check if room is full
+    if (room.playerIds.length >= room.maxPlayers) {
+      return false;
     }
     
     room.playerIds.push(playerId);
@@ -77,8 +104,32 @@ export class RoomService {
   /**
    * Gets a room by code
    */
-  getRoom(code: string): RoomModel | undefined {
+  getRoom(code: string): Room | undefined {
     return this.rooms.get(code);
+  }
+  
+  /**
+   * Gets a Crazy 8 room by code (with type safety)
+   */
+  getCrazy8Room(code: string): Crazy8Room | undefined {
+    const room = this.rooms.get(code);
+    return room && room.gameType === 'crazy8' ? room as Crazy8Room : undefined;
+  }
+  
+  /**
+   * Gets a Blackjack room by code (with type safety)
+   */
+  getBlackjackRoom(code: string): BlackjackRoom | undefined {
+    const room = this.rooms.get(code);
+    return room && room.gameType === 'blackjack' ? room as BlackjackRoom : undefined;
+  }
+  
+  /**
+   * Checks if a room can start a game (has minimum players)
+   */
+  canStartGame(code: string): boolean {
+    const room = this.rooms.get(code);
+    return room ? room.playerIds.length >= room.minPlayers : false;
   }
   
   /**

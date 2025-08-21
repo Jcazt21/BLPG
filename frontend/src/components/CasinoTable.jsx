@@ -28,7 +28,8 @@ const CasinoTable = React.memo(function CasinoTable({ players = [], dealer = nul
   const gamePhaseText = useMemo(() => {
     switch (gamePhase) {
       case 'waiting': return 'Waiting for players...';
-      case 'betting': return 'Place your bets';
+      // BETTING SYSTEM - TEMPORARILY DISABLED
+      // case 'betting': return 'Place your bets';
       case 'dealing': return 'Dealing cards...';
       case 'playing': return 'Players turn';
       case 'dealer': return 'Dealer turn';
