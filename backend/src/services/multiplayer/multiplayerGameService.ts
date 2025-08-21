@@ -2,8 +2,7 @@ import { Socket, Server } from 'socket.io';
 import { Card } from '../../types/gameTypes';
 import { DealingService } from '../game/dealingService';
 import { GameLogic } from '../game/gameLogic';
-import { calculateHand } from '../../utils/cardUtils';
-
+import { validateBet } from '../../utils/validationUtils';
 
 /**
  * Service for managing multiplayer game state
