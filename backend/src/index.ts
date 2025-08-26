@@ -45,6 +45,13 @@ type MultiplayerPlayer = {
   isStand: boolean;
   isBlackjack: boolean;
   status: 'playing' | 'stand' | 'bust' | 'blackjack';
+  // Victory counter
+  victories: number;
+  gamesWon: number;
+  gamesBlackjack: number;
+  gamesLost: number;
+  gamesDraw: number;
+  gamesBust: number;
 };
 
 type MultiplayerDealer = { 
@@ -149,7 +156,10 @@ function emitPlayersUpdate(roomCode: string) {
     const minimalPlayers = Array.from(room.players.values()).map(p => ({ 
       id: p.id, 
       name: p.name,
-      position: p.position 
+      position: p.position,
+      victories: p.victories,
+      gamesWon: p.gamesWon,
+      gamesBlackjack: p.gamesBlackjack
     }));
     io.to(roomCode).emit('playersUpdate', {
       players: minimalPlayers,
@@ -176,7 +186,14 @@ function broadcastGameState(roomCode: string, gameState: MultiplayerGameState) {
       status: p.status,
       isBust: p.isBust,
       isStand: p.isStand,
-      isBlackjack: p.isBlackjack
+      isBlackjack: p.isBlackjack,
+      // Include victory counters
+      victories: p.victories,
+      gamesWon: p.gamesWon,
+      gamesBlackjack: p.gamesBlackjack,
+      gamesLost: p.gamesLost,
+      gamesDraw: p.gamesDraw,
+      gamesBust: p.gamesBust
     })),
     dealer: {
       hand: gameState.dealer.hand,
@@ -199,20 +216,23 @@ function startDealingPhase(roomCode: string) {
   // Create shuffled deck
   const deck = createShuffledDeck();
   
-  // Deal initial cards using authentic casino sequence
-  const players = Array.from(room.players.values()).map((p: MultiplayerPlayer) => {
+  // Deal initial cards using authentic casino sequence and update existing players
+  const players: MultiplayerPlayer[] = [];
+  
+  for (const [playerId, player] of room.players.entries()) {
     const hand = [deck.pop()!, deck.pop()!];
     const handStatus = calculateHand(hand);
-    return {
-      ...p,
-      hand,
-      total: handStatus.total,
-      isBust: handStatus.isBust,
-      isBlackjack: handStatus.isBlackjack,
-      isStand: false,
-      status: handStatus.isBust ? 'bust' as const : handStatus.isBlackjack ? 'blackjack' as const : 'playing' as const,
-    };
-  });
+    
+    // Update the existing player object to preserve victory counters
+    player.hand = hand;
+    player.total = handStatus.total;
+    player.isBust = handStatus.isBust;
+    player.isBlackjack = handStatus.isBlackjack;
+    player.isStand = false;
+    player.status = handStatus.isBust ? 'bust' : handStatus.isBlackjack ? 'blackjack' : 'playing';
+    
+    players.push(player);
+  }
   
   // Deal dealer cards (one visible, one hidden)
   const dealerHand = [deck.pop()!, deck.pop()!];
@@ -225,7 +245,7 @@ function startDealingPhase(roomCode: string) {
     isBlackjack: false,
   };
   
-  // Update game state
+  // Update game state with the same player references
   room.gameState.players = players;
   room.gameState.dealer = dealer;
   room.gameState.deck = deck;
@@ -329,6 +349,13 @@ io.on('connection', (socket: Socket) => {
       isStand: false,
       isBlackjack: false,
       status: 'playing',
+      // Initialize victory counters
+      victories: 0,
+      gamesWon: 0,
+      gamesBlackjack: 0,
+      gamesLost: 0,
+      gamesDraw: 0,
+      gamesBust: 0,
     };
     const players = new Map<string, MultiplayerPlayer>();
     players.set(socket.id, player);
@@ -368,6 +395,13 @@ io.on('connection', (socket: Socket) => {
       isStand: false,
       isBlackjack: false,
       status: 'playing',
+      // Initialize victory counters
+      victories: 0,
+      gamesWon: 0,
+      gamesBlackjack: 0,
+      gamesLost: 0,
+      gamesDraw: 0,
+      gamesBust: 0,
     };
     room.sockets.add(socket.id);
     room.players.set(socket.id, player);
@@ -407,7 +441,7 @@ io.on('connection', (socket: Socket) => {
     
     room.playersReady.clear();
     
-    // Reset player state
+    // Reset player state (preserve victory counters)
     room.players.forEach(p => {
       p.hand = [];
       p.total = 0;
@@ -415,6 +449,7 @@ io.on('connection', (socket: Socket) => {
       p.isStand = false;
       p.isBlackjack = false;
       p.status = 'playing';
+      // Victory counters are preserved between rounds
     });
 
     const gameState: MultiplayerGameState = {
@@ -454,6 +489,7 @@ io.on('connection', (socket: Socket) => {
       p.isStand = false;
       p.isBlackjack = false;
       p.status = 'playing';
+      // Victory counters are preserved between rounds
     });
 
     const gameState: MultiplayerGameState = {
@@ -543,6 +579,28 @@ io.on('connection', (socket: Socket) => {
           status = 'lose';
         } else {
           status = 'draw';
+        }
+        
+        // Update victory counters based on result
+        switch (status) {
+          case 'win':
+            p.gamesWon++;
+            p.victories++;
+            break;
+          case 'blackjack':
+            p.gamesBlackjack++;
+            p.victories++;
+            break;
+          case 'lose':
+            p.gamesLost++;
+            break;
+          case 'draw':
+            p.gamesDraw++;
+            break;
+          case 'bust':
+            p.gamesBust++;
+            p.gamesLost++; // Bust counts as a loss
+            break;
         }
         
         gs.results[p.id] = {

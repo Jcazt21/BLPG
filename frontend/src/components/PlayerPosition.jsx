@@ -51,6 +51,12 @@ const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTur
       {/* Player info header */}
       <div className="player-info">
         <div className="player-name">{player.name}</div>
+        {/* Victory counter */}
+        {player.victories !== undefined && (
+          <div className="player-victories">
+            🏆 {player.victories} victories
+          </div>
+        )}
         {/* BETTING SYSTEM - TEMPORARILY DISABLED */}
         {/* <div className="player-bet">Bet: {player.bet || 0}</div>
         <div className="player-balance">Balance: {player.balance || 0}</div> */}

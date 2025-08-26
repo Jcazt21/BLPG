@@ -330,7 +330,14 @@ function BlackjackGame() {
             cards: p.hand || [],
             total: p.total || 0,
             status: p.isBust ? 'bust' : p.isBlackjack ? 'blackjack' : p.isStand ? 'stand' : 'playing',
-            isCurrentPlayer: p.id === socketId
+            isCurrentPlayer: p.id === socketId,
+            // Victory counters
+            victories: p.victories || 0,
+            gamesWon: p.gamesWon || 0,
+            gamesBlackjack: p.gamesBlackjack || 0,
+            gamesLost: p.gamesLost || 0,
+            gamesDraw: p.gamesDraw || 0,
+            gamesBust: p.gamesBust || 0
           }));
 
           const casinoDealer = {

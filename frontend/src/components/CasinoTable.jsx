@@ -1,9 +1,10 @@
 import React, { useMemo, useCallback } from 'react';
 import PlayerPosition from './PlayerPosition';
 import PlayingCard from '../PlayingCard';
+import VictoryLeaderboard from './VictoryLeaderboard';
 import './CasinoTable.css';
 
-const CasinoTable = React.memo(function CasinoTable({ players = [], dealer = null, gamePhase = 'waiting', currentTurn = -1 }) {
+const CasinoTable = React.memo(function CasinoTable({ players = [], dealer = null, gamePhase = 'waiting', currentTurn = -1, showLeaderboard = true }) {
   // Memoize active players filtering to prevent unnecessary recalculations
   const activePlayers = useMemo(() => {
     return players.filter(player => player && player.name);
@@ -54,6 +55,12 @@ const CasinoTable = React.memo(function CasinoTable({ players = [], dealer = nul
 
   return (
     <div className="casino-table">
+      {/* Victory Leaderboard */}
+      <VictoryLeaderboard 
+        players={activePlayers} 
+        isVisible={showLeaderboard && activePlayers.length > 1}
+      />
+
       {/* Dealer area at the top */}
       <div className="dealer-area">
         <div className="dealer-label">Dealer</div>
