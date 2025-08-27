@@ -42,6 +42,8 @@ export interface Crazy8SocketEvents {
   'crazy8:game-ended': (data: { winner: string; scores: any[] }) => void;
   'crazy8:player-joined': (data: { playerId: string; playerName: string }) => void;
   'crazy8:player-left': (data: { playerId: string }) => void;
+  'crazy8:turn-timer-started': (data: { playerId: string; timeoutSeconds: number }) => void;
+  'crazy8:turn-timeout': (data: { playerId: string; playerName: string }) => void;
   'crazy8:error': (data: { message: string; code?: string }) => void;
 }
 

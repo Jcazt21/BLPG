@@ -1,24 +1,5 @@
 import { Card, Deck } from '../types/gameTypes';
-
-export interface MultiplayerPlayer {
-  id: string;
-  name: string;
-  position: number;
-  hand: Card[];
-  total: number;
-  bet: number;
-  balance: number;
-  status: 'playing' | 'stand' | 'bust' | 'blackjack';
-  hasPlacedBet: boolean;
-}
-
-export interface MultiplayerDealer {
-  visibleCards: Card[];
-  holeCard?: Card;
-  total: number;
-  isBust: boolean;
-  isBlackjack: boolean;
-}
+import { MultiplayerPlayer, MultiplayerDealer } from '../types/bettingTypes';
 
 export interface DealingStep {
   type: 'player' | 'dealer';
@@ -170,8 +151,8 @@ export class DealingSequence {
     }));
 
     const updatedDealer: MultiplayerDealer = {
-      visibleCards: [],
-      holeCard: undefined,
+      hand: [],
+      hiddenCard: undefined,
       total: 0,
       isBust: false,
       isBlackjack: false
@@ -191,15 +172,15 @@ export class DealingSequence {
         }
       } else if (step.type === 'dealer') {
         if (step.isHoleCard) {
-          updatedDealer.holeCard = step.card;
+          updatedDealer.hiddenCard = step.card;
         } else {
-          updatedDealer.visibleCards.push(step.card);
+          updatedDealer.hand.push(step.card);
         }
       }
     }
 
     // Calculate dealer's visible total (only from visible cards)
-    const dealerVisibleStatus = this.calculateHand(updatedDealer.visibleCards);
+    const dealerVisibleStatus = this.calculateHand(updatedDealer.hand);
     updatedDealer.total = dealerVisibleStatus.total;
 
     return {
@@ -213,17 +194,18 @@ export class DealingSequence {
    * Reveal dealer's hole card (used when dealer's turn begins)
    */
   revealDealerHoleCard(dealer: MultiplayerDealer): MultiplayerDealer {
-    if (!dealer.holeCard) {
+    if (!dealer.hiddenCard) {
       throw new Error('No hole card to reveal');
     }
 
     const updatedDealer: MultiplayerDealer = {
       ...dealer,
-      visibleCards: [...dealer.visibleCards, dealer.holeCard]
+      hand: [...dealer.hand, dealer.hiddenCard],
+      hiddenCard: undefined
     };
 
     // Recalculate dealer's total with all cards
-    const allCards = [...updatedDealer.visibleCards];
+    const allCards = [...updatedDealer.hand];
     const handStatus = this.calculateHand(allCards);
     
     updatedDealer.total = handStatus.total;
@@ -263,7 +245,7 @@ export class DealingSequence {
    * Check if dealing sequence is complete
    */
   isComplete(): boolean {
-    return this.currentStep >= this.dealingSteps.length;
+    return this.dealingSteps.length > 0 && this.currentStep >= this.dealingSteps.length;
   }
 
   /**

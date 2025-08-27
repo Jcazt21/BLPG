@@ -1,3 +1,3 @@
-// Game types exports
+// Re-export all types for easier importing
 export * from './gameTypes';
-export * from './crazy8Types';
+export * from './bettingTypes';

@@ -1,4 +1,5 @@
-import { DealingSequence, MultiplayerPlayer, MultiplayerDealer } from './dealingSequence';
+import { DealingSequence } from './dealingSequence';
+import { MultiplayerPlayer, MultiplayerDealer } from '../types/bettingTypes';
 import { Card, Deck } from '../types/gameTypes';
 
 // Helper function to create a test deck
@@ -30,10 +31,22 @@ function createTestPlayers(): MultiplayerPlayer[] {
       position: 0,
       hand: [],
       total: 0,
-      bet: 100,
-      balance: 900,
+      isBust: false,
+      isStand: false,
+      isBlackjack: false,
       status: 'playing',
-      hasPlacedBet: true
+      victories: 0,
+      gamesWon: 0,
+      gamesBlackjack: 0,
+      gamesLost: 0,
+      gamesDraw: 0,
+      gamesBust: 0,
+      balance: 900,
+      currentBet: 100,
+      hasPlacedBet: true,
+      betHistory: [],
+      totalWinnings: 0,
+      totalLosses: 0
     },
     {
       id: 'player2',
@@ -41,10 +54,22 @@ function createTestPlayers(): MultiplayerPlayer[] {
       position: 1,
       hand: [],
       total: 0,
-      bet: 50,
-      balance: 950,
+      isBust: false,
+      isStand: false,
+      isBlackjack: false,
       status: 'playing',
-      hasPlacedBet: true
+      victories: 0,
+      gamesWon: 0,
+      gamesBlackjack: 0,
+      gamesLost: 0,
+      gamesDraw: 0,
+      gamesBust: 0,
+      balance: 950,
+      currentBet: 50,
+      hasPlacedBet: true,
+      betHistory: [],
+      totalWinnings: 0,
+      totalLosses: 0
     },
     {
       id: 'player3',
@@ -52,10 +77,22 @@ function createTestPlayers(): MultiplayerPlayer[] {
       position: 2,
       hand: [],
       total: 0,
-      bet: 200,
-      balance: 800,
+      isBust: false,
+      isStand: false,
+      isBlackjack: false,
       status: 'playing',
-      hasPlacedBet: true
+      victories: 0,
+      gamesWon: 0,
+      gamesBlackjack: 0,
+      gamesLost: 0,
+      gamesDraw: 0,
+      gamesBust: 0,
+      balance: 800,
+      currentBet: 200,
+      hasPlacedBet: true,
+      betHistory: [],
+      totalWinnings: 0,
+      totalLosses: 0
     }
   ];
 }
@@ -63,8 +100,8 @@ function createTestPlayers(): MultiplayerPlayer[] {
 // Helper function to create test dealer
 function createTestDealer(): MultiplayerDealer {
   return {
-    visibleCards: [],
-    holeCard: undefined,
+    hand: [],
+    hiddenCard: undefined,
     total: 0,
     isBust: false,
     isBlackjack: false
@@ -141,8 +178,8 @@ describe('DealingSequence', () => {
     it('should give dealer 1 visible card and 1 hole card', () => {
       const result = dealingSequence.dealInitialCards(testPlayers, testDealer);
       
-      expect(result.dealer.visibleCards).toHaveLength(1);
-      expect(result.dealer.holeCard).toBeDefined();
+      expect(result.dealer.hand).toHaveLength(1);
+      expect(result.dealer.hiddenCard).toBeDefined();
       expect(result.dealer.total).toBeGreaterThan(0);
     });
 
@@ -176,19 +213,16 @@ describe('DealingSequence', () => {
 
     it('should detect blackjack correctly', () => {
       // Create a deck that will give blackjack to first player
+      // Cards are dealt from the end (pop), dealing order: player1, player2, player3, dealer, then second round
       const blackjackDeck: Deck = [
-        { suit: 'hearts', value: '2' }, // Last card (dealer hole)
-        { suit: 'diamonds', value: '3' }, // Second to last
-        { suit: 'clubs', value: '4' }, // Third to last
-        { suit: 'spades', value: '5' }, // Fourth to last
-        { suit: 'hearts', value: '6' }, // Fifth to last
-        { suit: 'diamonds', value: '7' }, // Sixth to last
-        { suit: 'clubs', value: '8' }, // Seventh to last
+        { suit: 'hearts', value: '2' }, // Dealer hole card (last dealt)
+        { suit: 'clubs', value: 'A' }, // Player 3 second card
+        { suit: 'diamonds', value: '3' }, // Player 2 second card
+        { suit: 'spades', value: 'A' }, // Player 1 second card (blackjack!)
         { suit: 'spades', value: 'K' }, // Dealer visible card
-        { suit: 'hearts', value: 'A' }, // Player 1 second card (blackjack!)
         { suit: 'diamonds', value: '9' }, // Player 3 first card
         { suit: 'clubs', value: '10' }, // Player 2 first card
-        { suit: 'spades', value: 'K' }, // Player 1 first card (blackjack!)
+        { suit: 'hearts', value: 'K' }, // Player 1 first card (blackjack!)
       ];
       
       const blackjackSequence = new DealingSequence(blackjackDeck);
@@ -204,18 +238,18 @@ describe('DealingSequence', () => {
       const result = dealingSequence.dealInitialCards(testPlayers, testDealer);
       const dealerWithHole = result.dealer;
       
-      expect(dealerWithHole.holeCard).toBeDefined();
-      const initialVisibleCount = dealerWithHole.visibleCards.length;
+      expect(dealerWithHole.hiddenCard).toBeDefined();
+      const initialVisibleCount = dealerWithHole.hand.length;
       
       const revealedDealer = dealingSequence.revealDealerHoleCard(dealerWithHole);
       
-      expect(revealedDealer.visibleCards).toHaveLength(initialVisibleCount + 1);
-      expect(revealedDealer.visibleCards).toContain(dealerWithHole.holeCard);
+      expect(revealedDealer.hand).toHaveLength(initialVisibleCount + 1);
+      expect(revealedDealer.hand).toContain(dealerWithHole.hiddenCard);
     });
 
     it('should throw error if no hole card exists', () => {
       const dealerWithoutHole: MultiplayerDealer = {
-        visibleCards: [{ suit: 'hearts', value: 'K' }],
+        hand: [{ suit: 'hearts', value: 'K' }],
         total: 10,
         isBust: false,
         isBlackjack: false
