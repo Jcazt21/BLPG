@@ -1,20 +1,20 @@
 .playing-card {
-  width: 3.5vw;
-  height: 5vw;
+  width: 2.5rem;
+  height: 3.5rem;
   background: #181c1b;
-  border-radius: 0.5vw;
-  border: 2px solid #333;
-  box-shadow: 0 2px 8px #000a;
+  border-radius: 0.3rem;
+  border: 1px solid #333;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   font-family: 'Segoe UI', 'Arial', sans-serif;
-  font-size: 1.2vw;
+  font-size: 0.8rem;
   transition: transform 0.3s;
   perspective: 600px;
   overflow: hidden;
-  margin: 0 0.2vw;
+  margin: 0 0.1rem;
 }
 .playing-card .corner {
   position: absolute;
@@ -26,13 +26,13 @@
   z-index: 2;
 }
 .playing-card .top-left {
-  top: 0.3vw;
-  left: 0.4vw;
+  top: 0.2rem;
+  left: 0.25rem;
   align-items: flex-start;
 }
 .playing-card .bottom-right {
-  bottom: 0.3vw;
-  right: 0.4vw;
+  bottom: 0.2rem;
+  right: 0.25rem;
   align-items: flex-end;
   transform: rotate(180deg);
 }
@@ -40,7 +40,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  font-size: 2vw;
+  font-size: 1.2rem;
   font-weight: bold;
   transform: translate(-50%, -50%);
   opacity: 0.7;

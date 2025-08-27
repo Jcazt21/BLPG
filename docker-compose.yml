@@ -1,0 +1,45 @@
+services:
+  blpg-app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_HOST=${VITE_HOST}
+        - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
+        - VITE_FRONTEND_PORT=${VITE_FRONTEND_PORT}
+    container_name: BLPG
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    environment:
+      # Network Configuration
+      - HOST=${DOCKER_HOST:-0.0.0.0}
+      - PUBLIC_HOST=${HOST}
+      - BACKEND_PORT=${BACKEND_PORT}
+      - FRONTEND_PORT=${FRONTEND_PORT}
+      
+      # Environment
+      - NODE_ENV=${NODE_ENV}
+      
+      # CORS Configuration
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      
+      # Frontend Environment Variables (VITE_ prefix required)
+      - VITE_HOST=${VITE_HOST}
+      - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
+      - VITE_FRONTEND_PORT=${VITE_FRONTEND_PORT}
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - blpg-network
+    healthcheck:
+      test: ["CMD", "/app/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  blpg-network:
+    driver: bridge

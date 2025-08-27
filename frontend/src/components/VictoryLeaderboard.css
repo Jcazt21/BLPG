@@ -1,0 +1,172 @@
+/* Victory Leaderboard */
+.victory-leaderboard {
+  position: absolute;
+  top: 5rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid rgba(255, 213, 79, 0.3);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  min-width: 250px;
+  max-width: 300px;
+  backdrop-filter: blur(10px);
+  z-index: 50;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-header {
+  text-align: center;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 213, 79, 0.3);
+  padding-bottom: 0.5rem;
+}
+
+.leaderboard-header h3 {
+  color: #ffd54f;
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.leaderboard-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 213, 79, 0.3);
+  transform: translateX(2px);
+}
+
+.leaderboard-item.champion {
+  background: rgba(255, 213, 79, 0.15);
+  border-color: rgba(255, 213, 79, 0.5);
+  box-shadow: 0 0 10px rgba(255, 213, 79, 0.2);
+}
+
+.player-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+}
+
+.medal {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ffd54f;
+}
+
+.player-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.player-name {
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  font-weight: bold;
+  letter-spacing: 0.01em;
+}
+
+.player-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.victories {
+  color: #ffd54f;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.breakdown {
+  color: #b0b0b0;
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .victory-leaderboard {
+    position: fixed;
+    top: 4rem;
+    right: 0.5rem;
+    min-width: 200px;
+    max-width: 250px;
+    padding: 0.75rem;
+    z-index: 40;
+  }
+  
+  .leaderboard-header h3 {
+    font-size: 0.9rem;
+  }
+  
+  .player-name {
+    font-size: 0.8rem;
+  }
+  
+  .victories {
+    font-size: 0.75rem;
+  }
+  
+  .breakdown {
+    font-size: 0.65rem;
+  }
+  
+  .medal {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .victory-leaderboard {
+    top: 3.5rem;
+    min-width: 180px;
+    max-width: 220px;
+    padding: 0.5rem;
+    z-index: 40;
+  }
+  
+  .leaderboard-header h3 {
+    font-size: 0.8rem;
+  }
+  
+  .player-name {
+    font-size: 0.75rem;
+  }
+  
+  .victories {
+    font-size: 0.7rem;
+  }
+  
+  .breakdown {
+    font-size: 0.6rem;
+  }
+  
+  .medal {
+    font-size: 0.9rem;
+  }
+  
+  .leaderboard-item {
+    padding: 0.4rem;
+    gap: 0.5rem;
+  }
+}

@@ -14,7 +14,7 @@ const suitColors = {
   spades: '#e0e0e0', // white/gray
 };
 
-export default function PlayingCard({ value, suit, faceDown = false, flipped = false }) {
+const PlayingCard = React.memo(function PlayingCard({ value, suit, faceDown = false, flipped = false }) {
   if (faceDown) {
     return (
       <div className={`playing-card back${flipped ? ' flipped' : ''}`}>
@@ -36,4 +36,6 @@ export default function PlayingCard({ value, suit, faceDown = false, flipped = f
       </div>
     </div>
   );
-} 
+});
+
+export default PlayingCard;
