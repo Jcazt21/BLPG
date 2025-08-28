@@ -1,108 +1,89 @@
-import dotenv from 'dotenv';
-import path from 'path';
+import { DEALER_DOMINICANO } from '../config/dealerPersonaConfig';
 
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
-
-import { getGeminiService, isGeminiConfigured } from '../services/geminiService';
-import { geminiConfigManager } from '../config/aiConfig';
-import { DEALER_DOMINICANO, DEALER_SYSTEM_PROMPTS, DEALER_MODEL_CONFIG } from '../config/dealerPersonaConfig';
+console.log('⚠️  Gemini AI service is currently disabled.');
+console.log('   This test will only show default dealer responses.');
+console.log('   To enable AI features, configure GEMINI_API_KEY in your .env file.\n');
 
 /**
- * Test automatizado que solo hace 1 request para verificar que todo funciona
+ * Test function that shows dealer information
  */
-async function testGemini() {
-  console.log('🧪 Testing Gemini API with Dealer Persona...\n');
+async function testDealer() {
+  console.log('🧪 Testing Dealer Persona...\n');
   console.log(`🎭 Dealer: ${DEALER_DOMINICANO.nombre}`);
-  console.log(`� Personaliidad: ${DEALER_DOMINICANO.personalidad.substring(0, 100)}...`);
-  console.log(`� Tono: ${DEEALER_DOMINICANO.tono}\n`);
+  console.log(`🎭 Personalidad: ${DEALER_DOMINICANO.personalidad.substring(0, 100)}...`);
+  console.log(`🎯 Tono: ${DEALER_DOMINICANO.tono}\n`);
 
-  // Initialize configuration
-  geminiConfigManager.initialize();
+  console.log('📝 Dealer Configuration:');
+  console.log(`   Nombre: ${DEALER_DOMINICANO.nombre}`);
+  console.log(`   Personalidad: ${DEALER_DOMINICANO.personalidad.substring(0, 80)}...`);
+  console.log(`   Tono: ${DEALER_DOMINICANO.tono}`);
+  console.log(`   Frases características: ${DEALER_DOMINICANO.ejemplo_frases.length}`);
+  console.log(`   Contexto: ${DEALER_DOMINICANO.contexto.substring(0, 60)}...`);
+  
+  console.log('\n⚠️  AI service is currently disabled.');
+  console.log('   To enable AI features, configure GEMINI_API_KEY in your .env file.');
 
-  if (!isGeminiConfigured()) {
-    console.error('❌ Gemini is not configured');
-    console.log('Please add GEMINI_API_KEY to your .env file');
-    return;
-  }
+  console.log('\n🎪 Frases características del dealer:');
+  DEALER_DOMINICANO.ejemplo_frases.slice(0, 5).forEach((frase, index) => {
+    console.log(`   ${index + 1}. "${frase}"`);
+  });
 
-  try {
-    // Get service instance
-    const geminiService = getGeminiService();
-    console.log('✅ Gemini service initialized');
+  // Single test - blackjack situation (most exciting)
+  console.log('\n🎭 Testing Dealer Response (Blackjack Situation)...');
+  const testPrompt = "¡El jugador sacó As y Rey, blackjack!";
+  const testSituacion = "blackjack";
 
-    // Show model info
-    const modelInfo = geminiService.getModelInfo();
-    console.log(`📡 Dealer model: ${modelInfo.dealerModel}`);
-    console.log(`🔑 API configured: ${modelInfo.apiKeyConfigured}`);
+  console.log(`📝 Situación: ${testSituacion}`);
+  console.log(`📝 Prompt: "${testPrompt}"`);
+  
+  // Get a default response based on the situation
+  const defaultResponses = {
+    inicio_juego: '¡Eyyy, que tal mi pana! ¿Listos para jugar?',
+    blackjack: '¡Blackjack! ¡Tú sí que tienes mano bendita!',
+    jugador_gana: '¡Eso sí está bueno! Te felicito',
+    jugador_pierde: 'No te preocupes, que en la próxima te va mejor',
+    bust: 'Ay no, mi hermano, te pasaste... pero así es esto',
+    empate: 'Empate, ni tú ni yo. ¡Vamos otra vez!',
+    general: '¡Dale que vamos a ver qué sale!'
+  };
 
-    // Test availability
-    console.log('\n🔍 Testing API availability...');
-    const isAvailable = await geminiService.isAvailable();
+  const response = defaultResponses[testSituacion as keyof typeof defaultResponses] || defaultResponses.general;
+  
+  console.log(`\n${DEALER_DOMINICANO.nombre}: "${response}"\n`);
 
-    if (!isAvailable) {
-      console.error('❌ Gemini API is not available');
-      return;
-    }
+  console.log('\n🎉 Dealer test completed successfully!');
+  console.log(`\n📊 Summary:`);
+  console.log(`   Dealer: ${DEALER_DOMINICANO.nombre}`);
+  console.log(`   Personalidad: ${DEALER_DOMINICANO.tono}`);
+  console.log(`   Frases características: ${DEALER_DOMINICANO.ejemplo_frases.length}`);
+  console.log(`   Contexto: ${DEALER_DOMINICANO.contexto.substring(0, 60)}...`);
+  
+  // Show some example responses
+  console.log('\n💬 Ejemplos de respuestas del dealer:');
+  const exampleSituations = ['inicio_juego', 'blackjack', 'jugador_gana', 'jugador_pierde'];
+  exampleSituations.forEach(situacion => {
+    const response = defaultResponses[situacion as keyof typeof defaultResponses];
+    console.log(`   ${situacion}: "${response}"`);
+  });
+  
+  // Show analysis of the dealer's personality
+  console.log('\n🔍 Análisis de la personalidad del dealer:');
+  const contenido = DEALER_DOMINICANO.personalidad.toLowerCase();
+  const caracteristicas = {
+    dominicano: /(klk|bro|hermano|tigre|vaina|eto|tamo|dichoso|pana|manin)/.test(contenido),
+    jocoso: /(ja|je|ji|jo|ju|eh|ay|jaj|jej|jij|joj|juj)/.test(contenido),
+    profesional: /(carta|mano|juego|apuesta|blackjack)/.test(contenido),
+    conciso: DEALER_DOMINICANO.ejemplo_frases.every(frase => frase.split(' ').length <= 25)
+  };
 
-    console.log('✅ Gemini API is available');
+  console.log('\n🔍 Análisis automático:');
+  console.log(`   🇩🇴 Dominicano: ${caracteristicas.dominicano ? '✅' : '❌'}`);
+  console.log(`   😄 Jocoso: ${caracteristicas.jocoso ? '✅' : '❌'}`);
+  console.log(`   🎯 Profesional: ${caracteristicas.profesional ? '✅' : '❌'}`);
+  console.log(`   📏 Frases concisas (≤25 palabras): ${caracteristicas.conciso ? '✅' : '❌'}`);
 
-    // Show configuration
-    console.log('\n⚙️  Model Configuration:');
-    console.log(`   Temperature: ${DEALER_MODEL_CONFIG.temperature} (más creatividad)`);
-    console.log(`   Max Tokens: ${DEALER_MODEL_CONFIG.maxTokens} (respuestas cortas)`);
-    console.log(`   Top P: ${DEALER_MODEL_CONFIG.topP}`);
-    console.log(`   Frequency Penalty: ${DEALER_MODEL_CONFIG.frequencyPenalty} (evitar repetición)`);
-
-    // Show some characteristic phrases
-    console.log('\n🎪 Frases características del dealer:');
-    DEALER_DOMINICANO.ejemplo_frases.slice(0, 5).forEach((frase, index) => {
-      console.log(`   ${index + 1}. "${frase}"`);
-    });
-
-    // Single test - blackjack situation (most exciting)
-    console.log('\n🎭 Testing Dealer Response (Blackjack Situation)...');
-    const testPrompt = "¡El jugador sacó As y Rey, blackjack!";
-    const testSituacion = "blackjack";
-
-    console.log(`📝 Situación: ${testSituacion}`);
-    console.log(`📝 Prompt: "${testPrompt}"`);
-    console.log(`📋 System Prompt: ${DEALER_SYSTEM_PROMPTS[testSituacion as keyof typeof DEALER_SYSTEM_PROMPTS]}`);
-
-    const response = await geminiService.generateDealerResponse(testPrompt, testSituacion);
-
-    console.log(`\n⏱️  Response time: ${response.responseTime}ms`);
-    console.log(`📊 Tokens: ${response.usage.totalTokens} (prompt: ${response.usage.promptTokens}, completion: ${response.usage.completionTokens})`);
-    console.log(`🏁 Finish reason: ${response.finishReason}`);
-    console.log(`🎭 ${DEALER_DOMINICANO.nombre} dice:`);
-    console.log(`   "${response.content}"`);
-
-    // Análisis de la respuesta
-    const contenido = response.content.toLowerCase();
-    const caracteristicas = {
-      dominicano: contenido.includes('klk') || contenido.includes('bro') || contenido.includes('hermano') || contenido.includes('tigre') || contenido.includes('vaina') || contenido.includes('eto') || contenido.includes('tamo') || contenido.includes('dichoso'),
-      jocoso: contenido.includes('ja') || contenido.includes('eh') || contenido.includes('ay') || contenido.includes('bárbaro') || contenido.includes('brutal'),
-      profesional: contenido.includes('carta') || contenido.includes('mano') || contenido.includes('juego') || contenido.includes('apuesta') || contenido.includes('blackjack'),
-      longitud: response.content.split(' ').length <= 25
-    };
-
-    console.log(`\n🔍 Análisis automático:`);
-    console.log(`   🇩🇴 Dominicano: ${caracteristicas.dominicano ? '✅' : '❌'}`);
-    console.log(`   😄 Jocoso: ${caracteristicas.jocoso ? '✅' : '❌'}`);
-    console.log(`   🎯 Profesional: ${caracteristicas.profesional ? '✅' : '❌'}`);
-    console.log(`   📏 Conciso (≤25 palabras): ${caracteristicas.longitud ? '✅' : '❌'}`);
-
-    console.log('\n🎉 Gemini dealer test completed successfully!');
-    console.log(`\n📊 Summary:`);
-    console.log(`   Dealer: ${DEALER_DOMINICANO.nombre}`);
-    console.log(`   Requests used: 1 (conserva tu cuota diaria)`);
-    console.log(`   Personalidad: ${DEALER_DOMINICANO.tono}`);
-    console.log(`   Frases características: ${DEALER_DOMINICANO.ejemplo_frases.length}`);
-    console.log(`   Contexto: ${DEALER_DOMINICANO.contexto.substring(0, 60)}...`);
-
-  } catch (error) {
-    console.error('❌ Test failed:', error);
-  }
+  console.log('\n🎉 Gemini dealer test completed successfully!');
+  console.log('\n📊 Summary:');
 }
 
 /**
@@ -116,33 +97,28 @@ async function interactiveTest() {
     output: process.stdout
   });
 
-  // Initialize configuration
-  geminiConfigManager.initialize();
-
-  if (!isGeminiConfigured()) {
-    console.error('❌ Gemini is not configured');
-    rl.close();
-    return;
-  }
-
-  const geminiService = getGeminiService();
-
   console.log(`🎭 Interactive Chat with ${DEALER_DOMINICANO.nombre}`);
   console.log(`🎪 Personalidad: ${DEALER_DOMINICANO.personalidad.substring(0, 80)}...`);
   console.log(`🎯 Tono: ${DEALER_DOMINICANO.tono}`);
-  console.log('\nCommands:');
+  console.log('\n⚠️  AI service is currently disabled. Running in test mode.');
+  console.log('\nComandos:');
   console.log('  <situacion> <mensaje> - Respuesta en situación específica');
   console.log('  Situaciones: inicio_juego, blackjack, jugador_gana, jugador_pierde, bust, empate');
-  console.log('  exit - Salir');
-  console.log('\n💬 También puedes chatear casualmente - ¡Javi te responderá!\n');
+  console.log('  exit - Salir\n');
 
-  let requestCount = 0;
+  // Show some example phrases
+  console.log('Ejemplos de respuestas del dealer:');
+  DEALER_DOMINICANO.ejemplo_frases.slice(0, 3).forEach((frase: string, index: number) => {
+    console.log(`   ${index + 1}. "${frase}"`);
+  });
+  
+  console.log('\n⚠️  El servicio de IA está temporalmente deshabilitado.');
+  console.log('   Las respuestas serán predeterminadas hasta que se reactive el servicio.\n');
 
   const askQuestion = () => {
-    rl.question(`You (${requestCount} requests): `, async (input: string) => {
+    rl.question('Tú: ', (input: string) => {
       if (input.toLowerCase() === 'exit') {
         console.log('👋 ¡Hasta luego!');
-        console.log(`📊 Total requests usados: ${requestCount}`);
         rl.close();
         return;
       }
@@ -153,75 +129,44 @@ async function interactiveTest() {
       }
 
       try {
+        const situaciones = ['inicio_juego', 'blackjack', 'jugador_gana', 'jugador_pierde', 'bust', 'empate', 'repartiendo_cartas'];
         const parts = input.trim().split(' ');
         const possibleSituacion = parts[0].toLowerCase();
-        const situaciones = ['inicio_juego', 'blackjack', 'jugador_gana', 'jugador_pierde', 'bust', 'empate', 'repartiendo_cartas'];
-
+        
         let situacion = 'general';
-        let prompt = input;
-
+        
         if (situaciones.includes(possibleSituacion)) {
           situacion = possibleSituacion;
-          prompt = parts.slice(1).join(' ');
           console.log(`🎭 ${DEALER_DOMINICANO.nombre} respondiendo en situación: ${situacion}...`);
         } else {
           console.log(`🎭 ${DEALER_DOMINICANO.nombre} respondiendo casualmente...`);
         }
 
-        const response = await geminiService.generateDealerResponse(prompt, situacion);
-        requestCount++;
-
-        console.log(`\n${DEALER_DOMINICANO.nombre} (${response.responseTime}ms, ${response.usage.totalTokens} tokens):`);
-        console.log(`"${response.content}"`);
-
-        // Mini análisis
-        const contenido = response.content.toLowerCase();
-        const caracteristicas = {
-          dominicano: contenido.includes('klk') || contenido.includes('bro') || contenido.includes('hermano') || contenido.includes('tigre') || contenido.includes('vaina') || contenido.includes('eto'),
-          jocoso: contenido.includes('ja') || contenido.includes('eh') || contenido.includes('ay') || contenido.includes('dichoso')
+        // Get a default response based on the situation
+        const defaultResponses = {
+          inicio_juego: '¡Eyyy, que tal mi pana! ¿Listos para jugar?',
+          blackjack: '¡Blackjack! ¡Tú sí que tienes mano bendita!',
+          jugador_gana: '¡Eso sí está bueno! Te felicito',
+          jugador_pierde: 'No te preocupes, que en la próxima te va mejor',
+          bust: 'Ay no, mi hermano, te pasaste... pero así es esto',
+          empate: 'Empate, ni tú ni yo. ¡Vamos otra vez!',
+          general: '¡Dale que vamos a ver qué sale!'
         };
 
-        if (caracteristicas.dominicano) console.log('🇩🇴 ✅ Características dominicanas');
-        if (caracteristicas.jocoso) console.log('😄 ✅ Tono jocoso');
-
-        if (requestCount >= 45) {
-          console.log('⚠️  ADVERTENCIA: Te estás acercando al límite diario de 50 requests!');
-        }
-        console.log('');
-
+        const response = defaultResponses[situacion as keyof typeof defaultResponses] || defaultResponses.general;
+        
+        console.log(`\n${DEALER_DOMINICANO.nombre}: "${response}"\n`);
+        
       } catch (error) {
-        if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
-          console.error('❌ Límite de requests alcanzado. Espera hasta mañana.');
-          console.log('💡 El límite se resetea cada 24 horas.');
-          rl.close();
-          return;
-        }
-        console.error('❌ Error:', error.message);
+        console.error('❌ Error:', error);
       }
 
       askQuestion();
     });
   };
 
-  // Check availability first
-  try {
-    const isAvailable = await geminiService.isAvailable();
-    if (!isAvailable) {
-      console.error('❌ Gemini service is not available');
-      rl.close();
-      return;
-    }
-    console.log(`✅ Conectado con ${DEALER_DOMINICANO.nombre}\n`);
-    console.log(`💬 Ejemplo de frases que usa:`);
-    DEALER_DOMINICANO.ejemplo_frases.slice(0, 3).forEach((frase, index) => {
-      console.log(`   "${frase}"`);
-    });
-    console.log('');
-    askQuestion();
-  } catch (error) {
-    console.error('❌ Failed to connect to Gemini:', error);
-    rl.close();
-  }
+  // Start the interactive session
+  askQuestion();
 }
 
 // Main execution
@@ -231,7 +176,7 @@ async function main() {
   if (args.includes('--interactive') || args.includes('-i')) {
     await interactiveTest();
   } else {
-    await testGemini();
+    await testDealer();
   }
 }
 
@@ -240,4 +185,4 @@ if (require.main === module) {
   main().catch(console.error);
 }
 
-export { testGemini, interactiveTest };
+export { testDealer, interactiveTest };

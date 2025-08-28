@@ -52,7 +52,7 @@ export interface GeminiConfiguration {
  */
 const DEFAULT_GEMINI_CONFIG: GeminiConfiguration = {
   helpAssistant: {
-    enabled: true,
+    enabled: false,  // Disabled by default
     model: 'gemini-1.5-flash', // Más rápido y económico para ayuda
     config: {
       temperature: 0.7,
@@ -79,7 +79,7 @@ const DEFAULT_GEMINI_CONFIG: GeminiConfiguration = {
     }
   },
   dealerPersona: {
-    enabled: true,
+    enabled: false,  // Disabled by default
     model: 'gemini-1.5-flash', // Rápido para respuestas del dealer
     config: {
       temperature: 0.9, // Más creativo para personalidad del dealer
@@ -102,9 +102,9 @@ const DEFAULT_GEMINI_CONFIG: GeminiConfiguration = {
     }
   },
   general: {
-    apiKey: process.env.GEMINI_API_KEY || '',
-    retryAttempts: 3,
-    retryDelay: 1000
+    apiKey: '',  // Empty API key to prevent accidental usage
+    retryAttempts: 0,  // Disable retries
+    retryDelay: 0
   }
 };
 
@@ -149,8 +149,8 @@ function loadGeminiConfigFromEnv(): Partial<GeminiConfiguration> {
     },
     general: {
       apiKey: process.env.GEMINI_API_KEY || '',
-      retryAttempts: parseInt(process.env.GEMINI_RETRY_ATTEMPTS || '3'),
-      retryDelay: parseInt(process.env.GEMINI_RETRY_DELAY || '1000')
+      retryAttempts: parseInt(process.env.GEMINI_RETRY_ATTEMPTS || '0'),
+      retryDelay: parseInt(process.env.GEMINI_RETRY_DELAY || '0')
     }
   };
 }
@@ -174,8 +174,18 @@ class GeminiConfigManager {
   }
 
   public initialize(): void {
-    // 1. Empezar con configuración por defecto optimizada para Gemini
-    let finalConfig = { ...DEFAULT_GEMINI_CONFIG };
+    // 1. Start with default configuration with Gemini disabled
+    let finalConfig = { 
+      ...DEFAULT_GEMINI_CONFIG,
+      helpAssistant: {
+        ...DEFAULT_GEMINI_CONFIG.helpAssistant,
+        enabled: false  // Force disable
+      },
+      dealerPersona: {
+        ...DEFAULT_GEMINI_CONFIG.dealerPersona,
+        enabled: false  // Force disable
+      }
+    };
 
     // 2. Sobrescribir con variables de entorno
     const envConfig = loadGeminiConfigFromEnv();

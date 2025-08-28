@@ -1,20 +1,47 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
-import { io as Client, Socket as ClientSocket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { HelpNamespace } from './helpNamespace';
 import { HelpAssistantService } from '../services/helpAssistant/helpAssistantService';
 
+// Type definitions for test data
+interface SessionData {
+  sessionId: string;
+  welcomeMessage?: string;
+  roomCode?: string;
+}
+
+interface ResponseData {
+  sessionId: string;
+  message: {
+    type: string;
+    content: string;
+    metadata?: {
+      category?: string;
+      confidence?: number;
+      isBlackjackRelated?: boolean;
+      containsAdvice?: boolean;
+    };
+  };
+  isTyping: boolean;
+}
+
+interface QuestionData {
+  question: string;
+  sessionId?: string;
+}
+
 describe('HelpNamespace Integration', () => {
   let httpServer: any;
-  let io: SocketIOServer;
+  let ioServer: SocketIOServer;
   let helpNamespace: HelpNamespace;
   let mockHelpAssistant: jest.Mocked<HelpAssistantService>;
-  let clientSocket: ClientSocket;
+  let clientSocket: any;
   let serverAddress: string;
 
   beforeAll((done) => {
     httpServer = createServer();
-    io = new SocketIOServer(httpServer);
+    ioServer = new SocketIOServer(httpServer);
     
     // Create mock help assistant
     mockHelpAssistant = {
@@ -24,7 +51,7 @@ describe('HelpNamespace Integration', () => {
     } as any;
 
     // Initialize help namespace
-    helpNamespace = new HelpNamespace(io, mockHelpAssistant);
+    helpNamespace = new HelpNamespace(ioServer, mockHelpAssistant);
 
     httpServer.listen(() => {
       const port = (httpServer.address() as any).port;
@@ -34,7 +61,7 @@ describe('HelpNamespace Integration', () => {
   });
 
   afterAll(() => {
-    io.close();
+    ioServer.close();
     httpServer.close();
   });
 
@@ -56,7 +83,7 @@ describe('HelpNamespace Integration', () => {
     });
 
     // Connect client to help namespace
-    clientSocket = Client(`${serverAddress}/help`, {
+    clientSocket = io(`${serverAddress}/help`, {
       forceNew: true,
       transports: ['websocket']
     });
@@ -65,7 +92,7 @@ describe('HelpNamespace Integration', () => {
   });
 
   afterEach(() => {
-    if (clientSocket.connected) {
+    if (clientSocket?.connected) {
       clientSocket.disconnect();
     }
   });
@@ -74,7 +101,7 @@ describe('HelpNamespace Integration', () => {
     it('should start a help session successfully', (done) => {
       clientSocket.emit('help:startSession', { roomCode: 'TEST123' });
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         expect(data.sessionId).toMatch(/^help-[a-z0-9]+-[a-z0-9]+$/);
         expect(data.welcomeMessage).toContain('blackjack');
         done();
@@ -87,13 +114,13 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
         messagesReceived++;
         if (messagesReceived === 2) done(); // Wait for both events
       });
 
-      clientSocket.on('help:response', (data) => {
+      clientSocket.on('help:response', (data: ResponseData) => {
         expect(data.sessionId).toBe(sessionId);
         expect(data.message.type).toBe('system');
         expect(data.message.content).toContain('blackjack');
@@ -108,12 +135,12 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
         clientSocket.emit('help:endSession', { sessionId });
       });
 
-      clientSocket.on('help:sessionEnded', (data) => {
+      clientSocket.on('help:sessionEnded', (data: { sessionId: string; reason: string }) => {
         expect(data.sessionId).toBe(sessionId);
         expect(data.reason).toBe('user_requested');
         done();
@@ -123,7 +150,7 @@ describe('HelpNamespace Integration', () => {
     it('should handle invalid session ID', (done) => {
       clientSocket.emit('help:endSession', { sessionId: 'invalid-session' });
 
-      clientSocket.on('help:error', (data) => {
+      clientSocket.on('help:error', (data: { sessionId: string; error: string; canRetry: boolean; errorCode: string }) => {
         expect(data.sessionId).toBe('invalid-session');
         expect(data.error).toContain('Invalid session');
         expect(data.canRetry).toBe(false);
@@ -139,15 +166,12 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
-        clientSocket.emit('help:askQuestion', {
-          sessionId,
-          question: '¿Cuánto vale un As?'
-        });
+        clientSocket.emit('help:askQuestion', { question: '¿Cuánto vale un As?', sessionId } as QuestionData);
       });
 
-      clientSocket.on('help:response', (data) => {
+      clientSocket.on('help:response', (data: ResponseData) => {
         if (data.message.type === 'assistant') {
           expect(data.sessionId).toBe(sessionId);
           expect(data.message.content).toBe('Test response');
@@ -181,22 +205,19 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
-        clientSocket.emit('help:askQuestion', {
-          sessionId,
-          question: 'Test question'
-        });
+        clientSocket.emit('help:askQuestion', { question: 'Test question', sessionId } as QuestionData);
       });
 
-      clientSocket.on('help:typing', (data) => {
+      clientSocket.on('help:typing', (data: { sessionId: string; isTyping: boolean }) => {
         if (data.isTyping) {
           expect(data.sessionId).toBe(sessionId);
           typingReceived = true;
         }
       });
 
-      clientSocket.on('help:response', (data) => {
+      clientSocket.on('help:response', (data: ResponseData) => {
         if (data.message.type === 'assistant') {
           expect(typingReceived).toBe(true);
           expect(data.isTyping).toBe(false);
@@ -210,18 +231,15 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
         
         // Send a question that's too long (over 500 characters)
         const longQuestion = 'a'.repeat(501);
-        clientSocket.emit('help:askQuestion', {
-          sessionId,
-          question: longQuestion
-        });
+        clientSocket.emit('help:askQuestion', { question: longQuestion, sessionId } as QuestionData);
       });
 
-      clientSocket.on('help:error', (data) => {
+      clientSocket.on('help:error', (data: { sessionId: string; error: string; canRetry: boolean; errorCode: string }) => {
         expect(data.sessionId).toBe(sessionId);
         expect(data.error).toContain('too long');
         expect(data.canRetry).toBe(true);
@@ -235,15 +253,12 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
-        clientSocket.emit('help:askQuestion', {
-          sessionId,
-          question: '   ' // Empty/whitespace question
-        });
+        clientSocket.emit('help:askQuestion', { question: '   ', sessionId } as QuestionData); // Empty/whitespace question
       });
 
-      clientSocket.on('help:error', (data) => {
+      clientSocket.on('help:error', (data: { sessionId: string; error: string; canRetry: boolean; errorCode: string }) => {
         expect(data.sessionId).toBe(sessionId);
         expect(data.error).toContain('cannot be empty');
         expect(data.canRetry).toBe(true);
@@ -260,15 +275,12 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
-        clientSocket.emit('help:askQuestion', {
-          sessionId,
-          question: 'Test question'
-        });
+        clientSocket.emit('help:askQuestion', { question: 'Test question', sessionId } as QuestionData);
       });
 
-      clientSocket.on('help:error', (data) => {
+      clientSocket.on('help:error', (data: { sessionId: string; error: string; canRetry: boolean; errorCode: string }) => {
         expect(data.sessionId).toBe(sessionId);
         expect(data.error).toContain('Failed to process question');
         expect(data.canRetry).toBe(true);
@@ -294,7 +306,7 @@ describe('HelpNamespace Integration', () => {
         }
       });
 
-      clientSocket.on('help:rateLimitExceeded', (data) => {
+      clientSocket.on('help:rateLimitExceeded', (data: { sessionId: string; retryAfter: number; message: string }) => {
         expect(data.retryAfter).toBeGreaterThan(0);
         expect(data.message).toContain('Too many session requests');
         rateLimitHit = true;
@@ -311,7 +323,7 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
         
         // Rapidly send questions to trigger rate limit
@@ -329,7 +341,7 @@ describe('HelpNamespace Integration', () => {
         }
       });
 
-      clientSocket.on('help:rateLimitExceeded', (data) => {
+      clientSocket.on('help:rateLimitExceeded', (data: { sessionId: string; retryAfter: number; message: string }) => {
         expect(data.sessionId).toBe(sessionId);
         expect(data.retryAfter).toBeGreaterThan(0);
         expect(data.message).toContain('Too many questions');
@@ -344,7 +356,7 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
         
         // Verify session exists
@@ -369,7 +381,7 @@ describe('HelpNamespace Integration', () => {
 
       clientSocket.emit('help:startSession', {});
 
-      clientSocket.on('help:sessionStarted', (data) => {
+      clientSocket.on('help:sessionStarted', (data: SessionData) => {
         sessionId = data.sessionId;
         clientSocket.emit('help:typing', { sessionId, isTyping: true });
       });
@@ -390,7 +402,7 @@ describe('HelpNamespace Integration', () => {
         question: 'Test question'
       });
 
-      clientSocket.on('help:error', (data) => {
+      clientSocket.on('help:error', (data: { sessionId: string; error: string; canRetry: boolean; errorCode: string }) => {
         expect(data.sessionId).toBe('invalid-session');
         expect(data.error).toContain('Invalid session');
         expect(data.canRetry).toBe(false);
@@ -426,7 +438,7 @@ describe('HelpNamespace Integration', () => {
     it('should broadcast system messages', (done) => {
       const systemMessage = 'System maintenance in 5 minutes';
 
-      clientSocket.on('help:response', (data) => {
+      clientSocket.on('help:response', (data: ResponseData) => {
         if (data.message.type === 'system' && data.message.content === systemMessage) {
           expect(data.sessionId).toBe('broadcast');
           done();
