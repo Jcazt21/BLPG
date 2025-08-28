@@ -36,7 +36,8 @@ describe('BettingPhaseManager', () => {
     jest.useFakeTimers();
     
     rooms = new Map();
-    bettingPhaseManager = new BettingPhaseManager(mockIo, rooms, mockBettingManager);
+    const mockStartDealingPhase = jest.fn();
+    bettingPhaseManager = new BettingPhaseManager(mockIo, rooms, mockBettingManager, mockStartDealingPhase);
 
     // Create mock players
     mockPlayer1 = {

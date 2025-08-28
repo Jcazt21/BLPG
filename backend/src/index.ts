@@ -414,7 +414,7 @@ function broadcastBettingUpdate(roomCode: string, updateType: 'bet_placed' | 'be
       hasPlacedBet: p.hasPlacedBet,
       balance: p.balance,
       bettingStatus: p.hasPlacedBet ? 'placed' : 'pending',
-      canAffordMinBet: p.balance >= room.gameState.minBet,
+      canAffordMinBet: room.gameState ? p.balance >= room.gameState.minBet : false,
       // Betting timing information
       betTimestamp: p.hasPlacedBet ? Date.now() : null
     })),
@@ -597,7 +597,7 @@ function broadcastBettingProgress(roomCode: string) {
         id: p.id,
         name: p.name,
         balance: p.balance,
-        canAffordMinBet: p.balance >= room.gameState.minBet
+        canAffordMinBet: room.gameState ? p.balance >= room.gameState.minBet : false
       }))
     },
     

@@ -2,7 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import PlayingCard from '../PlayingCard';
 import './PlayerPosition.css';
 
-const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTurn = false, showCards = true, isCurrentPlayer = false }) {
+const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTurn = false, showCards = true, isCurrentPlayer = false, gamePhase = 'waiting' }) {
   const getStatusIcon = useCallback((status) => {
     switch (status) {
       case 'bust': return '💥';
@@ -27,9 +27,26 @@ const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTur
     }
   }, []);
 
+  const getBettingStatusInfo = useCallback((player, gamePhase) => {
+    if (gamePhase !== 'betting' && gamePhase !== 'dealing' && gamePhase !== 'playing') {
+      return null;
+    }
+
+    const hasPlacedBet = player.hasPlacedBet || (player.currentBet && player.currentBet > 0);
+    const bettingStatus = hasPlacedBet ? 'placed' : 'pending';
+    
+    return {
+      status: bettingStatus,
+      icon: bettingStatus === 'placed' ? '✓' : '⏳',
+      color: bettingStatus === 'placed' ? '#b6e2a1' : '#ffd54f',
+      text: bettingStatus === 'placed' ? 'Bet Placed' : 'Placing bet...'
+    };
+  }, []);
+
   // Memoize expensive calculations
   const statusIcon = useMemo(() => getStatusIcon(player.status), [player.status, getStatusIcon]);
   const statusColor = useMemo(() => getStatusColor(player.status), [player.status, getStatusColor]);
+  const bettingStatusInfo = useMemo(() => getBettingStatusInfo(player, gamePhase), [player, gamePhase, getBettingStatusInfo]);
 
   // Memoize card rendering to prevent unnecessary re-renders
   const renderedCards = useMemo(() => {
@@ -57,9 +74,31 @@ const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTur
             🏆 {player.victories} victories
           </div>
         )}
-        {/* BETTING SYSTEM - TEMPORARILY DISABLED */}
-        {/* <div className="player-bet">Bet: {player.bet || 0}</div>
-        <div className="player-balance">Balance: {player.balance || 0}</div> */}
+        
+        {/* Betting Information */}
+        {(player.balance !== undefined || player.currentBet !== undefined) && (
+          <div className="player-betting-info">
+            {player.balance !== undefined && (
+              <div className="player-balance">
+                💰 {player.balance}
+              </div>
+            )}
+            {player.currentBet !== undefined && player.currentBet > 0 && (
+              <div className="player-bet">
+                🎯 {player.currentBet}
+              </div>
+            )}
+            {bettingStatusInfo && gamePhase === 'betting' && (
+              <div 
+                className={`betting-status ${bettingStatusInfo.status}`}
+                style={{ color: bettingStatusInfo.color }}
+              >
+                <span className="betting-status-icon">{bettingStatusInfo.icon}</span>
+                <span className="betting-status-text">{bettingStatusInfo.text}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Player cards */}

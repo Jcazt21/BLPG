@@ -11,6 +11,17 @@
   max-width: 100%;
   width: auto;
   min-height: 100px;
+  transition: all 0.3s ease;
+}
+
+.betting-panel-component.disconnected {
+  border-color: rgba(255, 107, 107, 0.5);
+  background: rgba(139, 69, 19, 0.3);
+}
+
+.betting-panel-component.bet-confirmed {
+  border-color: rgba(105, 219, 124, 0.7);
+  background: rgba(0, 100, 0, 0.2);
 }
 
 .chips-section {
@@ -26,6 +37,12 @@
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.connection-status {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  font-weight: normal;
 }
 
 .chip-buttons {
@@ -89,10 +106,17 @@
   transform: translateY(0) scale(0.98);
 }
 
-.chip:disabled {
+.chip:disabled,
+.chip.chip-disabled {
   opacity: 0.4;
   cursor: not-allowed;
   transform: none;
+  filter: grayscale(50%);
+}
+
+.chip.chip-disabled::before,
+.chip.chip-disabled::after {
+  opacity: 0.1;
 }
 
 /* Chip colors based on value - Casino style */
@@ -162,6 +186,38 @@
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+}
+
+.bet-label.bet-updated {
+  transform: scale(1.1);
+  color: #fff;
+}
+
+.bet-label.bet-confirmed {
+  color: #69db7c;
+  text-shadow: 0 0 10px rgba(105, 219, 124, 0.5);
+}
+
+.confirmed-indicator {
+  color: #69db7c;
+  font-size: 1.2rem;
+  margin-left: 0.5rem;
+  animation: confirmPulse 0.5s ease-in-out;
+}
+
+@keyframes confirmPulse {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.betting-timer {
+  color: #ffa726;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-top: 0.25rem;
+  text-align: center;
 }
 
 .betting-controls {
@@ -200,6 +256,36 @@
   background: #e6c547;
 }
 
+.place-bet-btn.confirmed {
+  background: #69db7c;
+  color: #2d3748;
+}
+
+.place-bet-btn.confirmed:hover:not(:disabled) {
+  background: #51cf66;
+}
+
+.retry-bet-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  background: #ff8a65;
+  color: #fff;
+}
+
+.retry-bet-btn:hover:not(:disabled) {
+  background: #ff7043;
+}
+
+.retry-bet-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .clear-bet-btn:disabled,
 .place-bet-btn:disabled {
   opacity: 0.5;
@@ -211,6 +297,30 @@
   font-size: 0.9rem;
   margin-top: 0.5rem;
   font-weight: bold;
+}
+
+.error-msg {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.warning-msg {
+  color: #ffa726;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(255, 167, 38, 0.1);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 167, 38, 0.3);
 }
 
 /* Responsive design */
@@ -243,6 +353,16 @@
   .chip-buttons {
     gap: 0.5rem;
   }
+
+  .betting-timer {
+    font-size: 0.7rem;
+  }
+
+  .error-msg,
+  .warning-msg {
+    font-size: 0.7rem;
+    padding: 0.4rem;
+  }
 }
 
 @media (max-width: 600px) {
@@ -274,5 +394,19 @@
 
   .chip-buttons {
     gap: 0.4rem;
+  }
+
+  .betting-timer {
+    font-size: 0.6rem;
+  }
+
+  .error-msg,
+  .warning-msg {
+    font-size: 0.6rem;
+    padding: 0.3rem;
+  }
+
+  .confirmed-indicator {
+    font-size: 1rem;
   }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CasinoTable } from './index';
+import BettingPanel from './BettingPanel';
 import PlayingCard from '../PlayingCard';
 import logo from '../assets/logo.png';
 import { io } from 'socket.io-client';
@@ -37,6 +38,11 @@ function BlackjackGame() {
   const [startError, setStartError] = useState('');
   const [startLoading, setStartLoading] = useState(false);
   const [gameMode, setGameMode] = useState('multi'); // Go directly to multiplayer
+  
+  // Betting state
+  const [bettingTimeLeft, setBettingTimeLeft] = useState(0);
+  const [betError, setBetError] = useState('');
+  const [isPlacingBet, setIsPlacingBet] = useState(false);
 
   // Now it's safe to use socketId and creatorId
   const isCreator = socketId && creatorId && socketId === creatorId;
@@ -87,7 +93,43 @@ function BlackjackGame() {
         setStatus('multi-started');
       });
       socket.on('gameStateUpdate', state => {
+        console.log('Game state update:', state);
         setMultiGameState(state);
+      });
+      
+      // Betting events
+      socket.on('bettingPhaseStarted', (data) => {
+        console.log('Betting phase started:', data);
+        setBettingTimeLeft(data.timeLeft || data.duration);
+        setBetError('');
+      });
+      
+      socket.on('bettingTimeUpdate', (data) => {
+        setBettingTimeLeft(data.timeLeft);
+      });
+      
+      socket.on('betConfirmed', (data) => {
+        setIsPlacingBet(false);
+        setBetError('');
+        // Update the game state with new bet info
+        if (data.success && multiGameState) {
+          const updatedState = { ...multiGameState };
+          const playerIndex = updatedState.players.findIndex(p => p.id === socketId);
+          if (playerIndex !== -1) {
+            updatedState.players[playerIndex] = {
+              ...updatedState.players[playerIndex],
+              currentBet: data.betAmount,
+              balance: data.newBalance,
+              hasPlacedBet: true
+            };
+            setMultiGameState(updatedState);
+          }
+        }
+      });
+      
+      socket.on('betError', (data) => {
+        setIsPlacingBet(false);
+        setBetError(data.error);
       });
       return () => {
         socket.off('connect');
@@ -98,6 +140,10 @@ function BlackjackGame() {
         socket.off('playersUpdate');
         socket.off('gameStarted');
         socket.off('gameStateUpdate');
+        socket.off('bettingPhaseStarted');
+        socket.off('bettingTimeUpdate');
+        socket.off('betConfirmed');
+        socket.off('betError');
         socket.disconnect();
       };
     }
@@ -155,6 +201,53 @@ function BlackjackGame() {
     setNextRoundReady(false)
     setError('')
   }
+
+  // Betting functions
+  const handleChipClick = useCallback((chipValue) => {
+    if (!multiGameState || multiGameState.phase !== 'betting') return;
+    
+    const myPlayer = multiGameState.players.find(p => p.id === socketId);
+    if (!myPlayer) return;
+
+    const newBetAmount = (myPlayer.currentBet || 0) + chipValue;
+    
+    if (newBetAmount > myPlayer.balance + (myPlayer.currentBet || 0)) {
+      setBetError('Insufficient balance');
+      return;
+    }
+
+    setIsPlacingBet(true);
+    setBetError('');
+    socket.emit('placeBet', {
+      code: joinedRoom,
+      amount: newBetAmount
+    });
+  }, [multiGameState, socketId, joinedRoom]);
+
+  const handleAllIn = useCallback(() => {
+    if (!multiGameState || multiGameState.phase !== 'betting') return;
+    
+    const myPlayer = multiGameState.players.find(p => p.id === socketId);
+    if (!myPlayer) return;
+
+    setIsPlacingBet(true);
+    setBetError('');
+    socket.emit('placeBet', {
+      code: joinedRoom,
+      amount: myPlayer.balance + (myPlayer.currentBet || 0)
+    });
+  }, [multiGameState, socketId, joinedRoom]);
+
+  const handleClearBet = useCallback(() => {
+    if (!multiGameState || multiGameState.phase !== 'betting') return;
+    
+    setIsPlacingBet(true);
+    setBetError('');
+    socket.emit('clearBet', {
+      code: joinedRoom
+    });
+  }, [multiGameState, joinedRoom]);
+   
 
   const placeBet = () => {
     handleStart()
@@ -337,7 +430,11 @@ function BlackjackGame() {
             gamesBlackjack: p.gamesBlackjack || 0,
             gamesLost: p.gamesLost || 0,
             gamesDraw: p.gamesDraw || 0,
-            gamesBust: p.gamesBust || 0
+            gamesBust: p.gamesBust || 0,
+            // Betting information
+            balance: p.balance,
+            currentBet: p.currentBet,
+            hasPlacedBet: p.hasPlacedBet
           }));
 
           const casinoDealer = {
@@ -393,6 +490,42 @@ function BlackjackGame() {
               />
 
               <div className="casino-footer">
+                {/* Debug info */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div style={{ color: 'yellow', fontSize: '0.8rem', marginBottom: '0.5rem' }}>
+                    Debug: Phase={gs.phase}, MyPlayer={myPlayer ? 'exists' : 'null'}, HasBet={myPlayer?.hasPlacedBet}
+                  </div>
+                )}
+                
+                {/* Betting Panel during betting phase */}
+                {gs.phase === 'betting' && myPlayer && (
+                  <div className="betting-section">
+                    <BettingPanel
+                      balance={myPlayer.balance || 0}
+                      currentBet={myPlayer.currentBet || 0}
+                      onChipClick={handleChipClick}
+                      onAllIn={handleAllIn}
+                      onClearBet={handleClearBet}
+                      disabled={isPlacingBet || myPlayer.hasPlacedBet}
+                      bettingTimeLeft={bettingTimeLeft}
+                      minBet={25}
+                      maxBet={null}
+                      isConnected={socket.connected}
+                      betConfirmed={myPlayer.hasPlacedBet}
+                    />
+                    {betError && (
+                      <div className="bet-error" style={{ 
+                        color: '#ff6b6b', 
+                        textAlign: 'center', 
+                        marginTop: '1rem',
+                        fontSize: '0.9rem'
+                      }}>
+                        {betError}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && (
                   <div className="action-buttons">
                     <button
