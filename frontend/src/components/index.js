@@ -7,3 +7,6 @@ export { default as BettingPhaseManagerDemo } from './BettingPhaseManagerDemo';
 export { default as GameModeSelector } from './GameModeSelector';
 export { default as BlackjackGame } from './BlackjackGame';
 export { default as VictoryLeaderboard } from './VictoryLeaderboard';
+
+// Help components
+export * from './help';

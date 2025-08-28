@@ -126,11 +126,6 @@ export class BettingPhaseManager {
 
     console.log(`Betting phase ended in room ${roomCode}, reason: ${reason}, total pot: ${room.gameState.totalPot}`);
     
-    // Proceed to complete the betting phase and transition to next phase
-    setTimeout(() => {
-      this.completeBettingPhase(roomCode);
-    }, 100); // Small delay to allow for async operations to complete
-    
     return true;
   }
 
@@ -284,8 +279,10 @@ export class BettingPhaseManager {
         clearInterval(timer);
         this.bettingTimers.delete(roomCode);
         
-        // End betting phase and proceed to next phase
-        this.completeBettingPhase(roomCode);
+        // Only complete betting phase if still in betting phase
+        if (room.gameState.phase === 'betting') {
+          this.completeBettingPhase(roomCode);
+        }
       }
     }, 1000);
 
@@ -300,9 +297,11 @@ export class BettingPhaseManager {
     const room = this.rooms.get(roomCode);
     if (!room || !room.gameState) return;
 
-    // End betting phase
-    const success = this.endBettingPhase(roomCode, 'timeout');
-    if (!success) return;
+    // Check if betting phase is still active
+    if (room.gameState.phase !== 'betting') {
+      console.log(`Betting phase already completed in room ${roomCode}, current phase: ${room.gameState.phase}`);
+      return;
+    }
 
     // Check if any players have placed bets
     const playersWithBets = Array.from(room.players.values()).filter(p => p.hasPlacedBet && p.currentBet > 0);
@@ -338,6 +337,15 @@ export class BettingPhaseManager {
   private transitionToDealingPhase(roomCode: string): void {
     const room = this.rooms.get(roomCode);
     if (!room || !room.gameState) return;
+
+    // Check if we're still in betting phase before transitioning
+    if (room.gameState.phase !== 'betting') {
+      console.log(`Cannot transition to dealing phase: current phase is ${room.gameState.phase}, expected 'betting'`);
+      return;
+    }
+
+    // Set phase to dealing to prevent multiple transitions
+    room.gameState.phase = 'dealing';
 
     // Emit dealing phase started event
     this.io.to(roomCode).emit('dealingPhaseStarted', {

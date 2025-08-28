@@ -14,6 +14,33 @@ export interface EnvironmentConfig {
   
   // CORS
   CORS_ORIGIN: string;
+  
+  // Help Assistant Configuration
+  HELP_ASSISTANT: {
+    ENABLED: boolean;
+    PROVIDER: 'openai' | 'anthropic' | 'gemini' | 'mock';
+    LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
+    MODEL: string;
+    MAX_TOKENS: number;
+    TEMPERATURE: number;
+    TIMEOUT: number;
+    API_KEYS: {
+      OPENAI?: string;
+      ANTHROPIC?: string;
+      GEMINI?: string;
+    };
+    RATE_LIMIT: {
+      PER_MINUTE: number;
+      PER_HOUR: number;
+      PER_DAY: number;
+    };
+    CACHE: {
+      ENABLED: boolean;
+      TTL: number;
+      MAX_SIZE: number;
+    };
+    METRICS_ENABLED: boolean;
+  };
 }
 
 export class ConfigurationError extends Error {
@@ -73,7 +100,32 @@ export class ConfigManager {
       WEBSOCKET_URL: `ws://${publicHost}:${backendPort}`,
       FRONTEND_URL: `http://${publicHost}:${frontendPort}`,
       NODE_ENV: (process.env.NODE_ENV as any) || 'development',
-      CORS_ORIGIN: process.env.CORS_ORIGIN || '*'
+      CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
+      HELP_ASSISTANT: {
+        ENABLED: process.env.HELP_ASSISTANT_ENABLED === 'true',
+        PROVIDER: (process.env.HELP_ASSISTANT_PROVIDER as any) || 'mock',
+        LOG_LEVEL: (process.env.HELP_ASSISTANT_LOG_LEVEL as any) || 'info',
+        MODEL: process.env.HELP_ASSISTANT_MODEL || 'gpt-3.5-turbo',
+        MAX_TOKENS: parseInt(process.env.HELP_ASSISTANT_MAX_TOKENS || '300'),
+        TEMPERATURE: parseFloat(process.env.HELP_ASSISTANT_TEMPERATURE || '0.7'),
+        TIMEOUT: parseInt(process.env.HELP_ASSISTANT_TIMEOUT || '5000'),
+        API_KEYS: {
+          OPENAI: process.env.OPENAI_API_KEY,
+          ANTHROPIC: process.env.ANTHROPIC_API_KEY,
+          GEMINI: process.env.GEMINI_API_KEY
+        },
+        RATE_LIMIT: {
+          PER_MINUTE: parseInt(process.env.HELP_RATE_LIMIT_PER_MINUTE || '5'),
+          PER_HOUR: parseInt(process.env.HELP_RATE_LIMIT_PER_HOUR || '50'),
+          PER_DAY: parseInt(process.env.HELP_RATE_LIMIT_PER_DAY || '200')
+        },
+        CACHE: {
+          ENABLED: process.env.HELP_CACHE_ENABLED === 'true',
+          TTL: parseInt(process.env.HELP_CACHE_TTL || '3600'),
+          MAX_SIZE: parseInt(process.env.HELP_CACHE_MAX_SIZE || '1000')
+        },
+        METRICS_ENABLED: process.env.HELP_METRICS_ENABLED === 'true'
+      }
     };
     
     return this.config;

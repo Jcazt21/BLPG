@@ -21,6 +21,8 @@ import {
 import { BettingManager } from './services/bettingManager';
 import { BettingPhaseManager } from './services/bettingPhaseManager';
 import { ConfigManager } from './config/environment';
+import { HelpNamespace } from './sockets/helpNamespace';
+import { HelpAssistantService } from './services/helpAssistant/helpAssistantService';
 
 // Validate configuration on startup
 ConfigManager.validate();
@@ -414,7 +416,7 @@ function broadcastBettingUpdate(roomCode: string, updateType: 'bet_placed' | 'be
       hasPlacedBet: p.hasPlacedBet,
       balance: p.balance,
       bettingStatus: p.hasPlacedBet ? 'placed' : 'pending',
-      canAffordMinBet: room.gameState ? p.balance >= room.gameState.minBet : false,
+      canAffordMinBet: p.balance >= (room.gameState?.minBet || 0),
       // Betting timing information
       betTimestamp: p.hasPlacedBet ? Date.now() : null
     })),
@@ -597,7 +599,7 @@ function broadcastBettingProgress(roomCode: string) {
         id: p.id,
         name: p.name,
         balance: p.balance,
-        canAffordMinBet: room.gameState ? p.balance >= room.gameState.minBet : false
+        canAffordMinBet: p.balance >= (room.gameState?.minBet || 0)
       }))
     },
     
@@ -635,9 +637,9 @@ function startDealingPhase(roomCode: string) {
   const room = rooms.get(roomCode);
   if (!room || !room.gameState) return;
   
-  // Ensure we're transitioning from betting phase
-  if (room.gameState.phase !== 'betting') {
-    console.warn(`Cannot start dealing phase: current phase is ${room.gameState.phase}, expected 'betting'`);
+  // Ensure we're transitioning from betting or dealing phase (dealing phase set by BettingPhaseManager)
+  if (room.gameState.phase !== 'betting' && room.gameState.phase !== 'dealing') {
+    console.warn(`Cannot start dealing phase: current phase is ${room.gameState.phase}, expected 'betting' or 'dealing'`);
     return;
   }
   
@@ -738,6 +740,10 @@ const io = new SocketIOServer(httpServer, {
 
 // Initialize betting phase manager after io is created
 bettingPhaseManager = new BettingPhaseManager(io, rooms, bettingManager, startDealingPhase);
+
+// Initialize help assistant service and namespace
+const helpAssistantService = new HelpAssistantService();
+const helpNamespace = new HelpNamespace(io, helpAssistantService);
 
 // Connection pooling and cleanup optimizations
 const connectionPool = new Map<string, { socket: Socket; lastActivity: number; roomCode?: string }>();
