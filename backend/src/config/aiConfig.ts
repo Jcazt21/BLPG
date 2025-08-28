@@ -52,41 +52,31 @@ export interface GeminiConfiguration {
  */
 const DEFAULT_GEMINI_CONFIG: GeminiConfiguration = {
   helpAssistant: {
-    enabled: false,  // Disabled by default
-    model: 'gemini-1.5-flash', // Más rápido y económico para ayuda
+    enabled: true,
+    model: 'gemini-1.5-flash',
     config: {
       temperature: 0.7,
-      maxTokens: 500,
-      timeout: 8000,
-      topP: 0.9,
-      topK: 40,
-      safetySettings: [
-        {
-          category: 'HARM_CATEGORY_HARASSMENT',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-        },
-        {
-          category: 'HARM_CATEGORY_HATE_SPEECH',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-        }
-      ]
+      maxTokens: 300,
+      timeout: 5000,
+      topP: 0.95,
+      topK: 40
     },
     rateLimit: {
-      perMinute: 15,
-      perHour: 100,
-      perDay: 500,
-      burstLimit: 5
+      perMinute: 60,
+      perHour: 1000,
+      perDay: 10000,
+      burstLimit: 30
     }
   },
   dealerPersona: {
-    enabled: false,  // Disabled by default
-    model: 'gemini-1.5-flash', // Rápido para respuestas del dealer
+    enabled: true,
+    model: 'gemini-1.5-pro',
     config: {
-      temperature: 0.9, // Más creativo para personalidad del dealer
-      maxTokens: 200,
-      timeout: 5000,
-      topP: 0.95,
-      topK: 30,
+      temperature: 0.8,
+      maxTokens: 400,
+      timeout: 8000,
+      topP: 0.9,
+      topK: 32,
       safetySettings: [
         {
           category: 'HARM_CATEGORY_HARASSMENT',

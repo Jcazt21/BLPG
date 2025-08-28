@@ -1,11 +1,24 @@
 import { DEALER_DOMINICANO } from '../config/dealerPersonaConfig';
+import { DealerPersonaService } from '../services/dealerPersonaService';
+import { geminiConfigManager } from '../config/aiConfig';
+import { isGeminiConfigured } from '../services/geminiService';
 
-console.log('⚠️  Gemini AI service is currently disabled.');
-console.log('   This test will only show default dealer responses.');
-console.log('   To enable AI features, configure GEMINI_API_KEY in your .env file.\n');
+// Initialize the dealer persona service
+const dealerService = new DealerPersonaService();
+
+// Check if Gemini is configured
+const geminiConfigured = isGeminiConfigured();
+
+if (!geminiConfigured) {
+  console.log('⚠️  Gemini AI service is not properly configured.');
+  console.log('   This test will only show default dealer responses.');
+  console.log('   To enable AI features, configure GEMINI_API_KEY in your .env file.\n');
+} else {
+  console.log('✅ Gemini AI service is configured and ready to use!\n');
+}
 
 /**
- * Test function that shows dealer information
+ * Test function that shows dealer information and tests responses
  */
 async function testDealer() {
   console.log('🧪 Testing Dealer Persona...\n');
@@ -20,145 +33,119 @@ async function testDealer() {
   console.log(`   Frases características: ${DEALER_DOMINICANO.ejemplo_frases.length}`);
   console.log(`   Contexto: ${DEALER_DOMINICANO.contexto.substring(0, 60)}...`);
   
-  console.log('\n⚠️  AI service is currently disabled.');
-  console.log('   To enable AI features, configure GEMINI_API_KEY in your .env file.');
+  console.log('\n🔧 Gemini AI Status:', geminiConfigured ? '✅ Enabled' : '❌ Disabled');
+  if (!geminiConfigured) {
+    console.log('   Using fallback responses only');
+  }
 
   console.log('\n🎪 Frases características del dealer:');
   DEALER_DOMINICANO.ejemplo_frases.slice(0, 5).forEach((frase, index) => {
     console.log(`   ${index + 1}. "${frase}"`);
   });
 
-  // Single test - blackjack situation (most exciting)
-  console.log('\n🎭 Testing Dealer Response (Blackjack Situation)...');
-  const testPrompt = "¡El jugador sacó As y Rey, blackjack!";
-  const testSituacion = "blackjack";
+  // Test different game situations
+  const testScenarios = [
+    { situacion: 'inicio_juego', desc: 'Inicio del juego', mensaje: '¡Hola! ¿Estás listo para jugar?' },
+    { situacion: 'blackjack', desc: 'Jugador obtiene blackjack', mensaje: '¡Tengo blackjack con As y Jota!' },
+    { situacion: 'jugador_gana', desc: 'Jugador gana la mano', mensaje: '¡Gané esta ronda!' },
+    { situacion: 'jugador_pierde', desc: 'Jugador pierde la mano', mensaje: 'Me pasé de 21, ¡te toca a ti!' },
+    { situacion: 'bust', desc: 'Jugador se pasa de 21', mensaje: '¡Me pasé de 21!' },
+    { situacion: 'empate', desc: 'Empate', mensaje: '¡Es un empate!' },
+    { situacion: 'general', desc: 'Mensaje general', mensaje: '¿Qué te parece si jugamos otra ronda?' }
+  ];
 
-  console.log(`📝 Situación: ${testSituacion}`);
-  console.log(`📝 Prompt: "${testPrompt}"`);
+  for (const scenario of testScenarios) {
+    console.log(`\n🎭 Testing Scenario: ${scenario.desc} (${scenario.situacion})`);
+    console.log(`📝 Mensaje: "${scenario.mensaje}"`);
+    
+    const context = {
+      situacion: scenario.situacion as any,
+      jugador_nombre: 'Jugador de Prueba',
+      cartas_jugador: ['As', 'Rey'],
+      cartas_dealer: ['8', '9'],
+      apuesta: 100
+    };
+
+    try {
+      const response = await dealerService.generarRespuestaDealer(context, scenario.mensaje);
+      console.log('💬 Respuesta del dealer:');
+      console.log(`   "${response.contenido}"`);
+      console.log(`   Tono: ${response.tono_usado}`);
+      if (response.metadata) {
+        console.log(`   Modelo: ${response.metadata.modelo || 'N/A'}`);
+        console.log(`   Tokens: ${response.metadata.tokens || 'N/A'}`);
+      }
+    } catch (error) {
+      console.error('❌ Error al generar respuesta:', error instanceof Error ? error.message : 'Error desconocido');
+    }
+  }
   
-  // Get a default response based on the situation
-  const defaultResponses = {
-    inicio_juego: '¡Eyyy, que tal mi pana! ¿Listos para jugar?',
-    blackjack: '¡Blackjack! ¡Tú sí que tienes mano bendita!',
-    jugador_gana: '¡Eso sí está bueno! Te felicito',
-    jugador_pierde: 'No te preocupes, que en la próxima te va mejor',
-    bust: 'Ay no, mi hermano, te pasaste... pero así es esto',
-    empate: 'Empate, ni tú ni yo. ¡Vamos otra vez!',
-    general: '¡Dale que vamos a ver qué sale!'
-  };
-
-  const response = defaultResponses[testSituacion as keyof typeof defaultResponses] || defaultResponses.general;
+  console.log('\n✅ Prueba de escenarios completada');
   
-  console.log(`\n${DEALER_DOMINICANO.nombre}: "${response}"\n`);
-
-  console.log('\n🎉 Dealer test completed successfully!');
-  console.log(`\n📊 Summary:`);
-  console.log(`   Dealer: ${DEALER_DOMINICANO.nombre}`);
-  console.log(`   Personalidad: ${DEALER_DOMINICANO.tono}`);
-  console.log(`   Frases características: ${DEALER_DOMINICANO.ejemplo_frases.length}`);
-  console.log(`   Contexto: ${DEALER_DOMINICANO.contexto.substring(0, 60)}...`);
-  
-  // Show some example responses
-  console.log('\n💬 Ejemplos de respuestas del dealer:');
-  const exampleSituations = ['inicio_juego', 'blackjack', 'jugador_gana', 'jugador_pierde'];
-  exampleSituations.forEach(situacion => {
-    const response = defaultResponses[situacion as keyof typeof defaultResponses];
-    console.log(`   ${situacion}: "${response}"`);
-  });
-  
-  // Show analysis of the dealer's personality
-  console.log('\n🔍 Análisis de la personalidad del dealer:');
-  const contenido = DEALER_DOMINICANO.personalidad.toLowerCase();
-  const caracteristicas = {
-    dominicano: /(klk|bro|hermano|tigre|vaina|eto|tamo|dichoso|pana|manin)/.test(contenido),
-    jocoso: /(ja|je|ji|jo|ju|eh|ay|jaj|jej|jij|joj|juj)/.test(contenido),
-    profesional: /(carta|mano|juego|apuesta|blackjack)/.test(contenido),
-    conciso: DEALER_DOMINICANO.ejemplo_frases.every(frase => frase.split(' ').length <= 25)
-  };
-
-  console.log('\n🔍 Análisis automático:');
-  console.log(`   🇩🇴 Dominicano: ${caracteristicas.dominicano ? '✅' : '❌'}`);
-  console.log(`   😄 Jocoso: ${caracteristicas.jocoso ? '✅' : '❌'}`);
-  console.log(`   🎯 Profesional: ${caracteristicas.profesional ? '✅' : '❌'}`);
-  console.log(`   📏 Frases concisas (≤25 palabras): ${caracteristicas.conciso ? '✅' : '❌'}`);
-
-  console.log('\n🎉 Gemini dealer test completed successfully!');
-  console.log('\n📊 Summary:');
+  if (!geminiConfigured) {
+    console.log('\n🔧 Para habilitar respuestas de IA:');
+    console.log('   1. Obtén una API key de Google AI Studio');
+    console.log('   2. Configura la variable GEMINI_API_KEY en tu archivo .env');
+    console.log('   3. Reinicia el servidor');
+    console.log('\n   Ejemplo de .env:');
+    console.log('   GEMINI_API_KEY=tu_api_key_aquí');
+  } else {
+    console.log('\n🎉 ¡La integración con Gemini está funcionando correctamente!');
+  }
 }
 
 /**
- * Test interactivo - permite chatear con el dealer
+ * Interactive test - chat with the dealer
  */
 async function interactiveTest() {
-  const readline = require('readline');
+  console.log('\n💬 Modo Interactivo');
+  console.log(`   Escribe tu mensaje y presiona Enter para chatear con ${DEALER_DOMINICANO.nombre}.`);
+  console.log('   Escribe "salir" para terminar.\n');
 
+  if (!geminiConfigured) {
+    console.log('⚠️  La IA está deshabilitada. Solo se mostrarán respuestas predeterminadas.');
+    console.log('   Configura GEMINI_API_KEY en tu archivo .env para habilitar respuestas de IA.\n');
+  }
+
+  const readline = require('readline');
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
 
-  console.log(`🎭 Interactive Chat with ${DEALER_DOMINICANO.nombre}`);
-  console.log(`🎪 Personalidad: ${DEALER_DOMINICANO.personalidad.substring(0, 80)}...`);
-  console.log(`🎯 Tono: ${DEALER_DOMINICANO.tono}`);
-  console.log('\n⚠️  AI service is currently disabled. Running in test mode.');
-  console.log('\nComandos:');
-  console.log('  <situacion> <mensaje> - Respuesta en situación específica');
-  console.log('  Situaciones: inicio_juego, blackjack, jugador_gana, jugador_pierde, bust, empate');
-  console.log('  exit - Salir\n');
-
-  // Show some example phrases
-  console.log('Ejemplos de respuestas del dealer:');
-  DEALER_DOMINICANO.ejemplo_frases.slice(0, 3).forEach((frase: string, index: number) => {
-    console.log(`   ${index + 1}. "${frase}"`);
-  });
-  
-  console.log('\n⚠️  El servicio de IA está temporalmente deshabilitado.');
-  console.log('   Las respuestas serán predeterminadas hasta que se reactive el servicio.\n');
-
   const askQuestion = () => {
-    rl.question('Tú: ', (input: string) => {
-      if (input.toLowerCase() === 'exit') {
-        console.log('👋 ¡Hasta luego!');
+    rl.question('Tú: ', async (input: string) => {
+      if (input.toLowerCase() === 'salir') {
+        console.log('\n👋 ¡Hasta luego!');
         rl.close();
         return;
       }
 
-      if (input.trim() === '') {
-        askQuestion();
-        return;
-      }
-
       try {
-        const situaciones = ['inicio_juego', 'blackjack', 'jugador_gana', 'jugador_pierde', 'bust', 'empate', 'repartiendo_cartas'];
-        const parts = input.trim().split(' ');
-        const possibleSituacion = parts[0].toLowerCase();
-        
-        let situacion = 'general';
-        
-        if (situaciones.includes(possibleSituacion)) {
-          situacion = possibleSituacion;
-          console.log(`🎭 ${DEALER_DOMINICANO.nombre} respondiendo en situación: ${situacion}...`);
-        } else {
-          console.log(`🎭 ${DEALER_DOMINICANO.nombre} respondiendo casualmente...`);
-        }
-
-        // Get a default response based on the situation
-        const defaultResponses = {
-          inicio_juego: '¡Eyyy, que tal mi pana! ¿Listos para jugar?',
-          blackjack: '¡Blackjack! ¡Tú sí que tienes mano bendita!',
-          jugador_gana: '¡Eso sí está bueno! Te felicito',
-          jugador_pierde: 'No te preocupes, que en la próxima te va mejor',
-          bust: 'Ay no, mi hermano, te pasaste... pero así es esto',
-          empate: 'Empate, ni tú ni yo. ¡Vamos otra vez!',
-          general: '¡Dale que vamos a ver qué sale!'
+        const context = {
+          situacion: 'general',
+          jugador_nombre: 'Tú',
+          cartas_jugador: [],
+          cartas_dealer: [],
+          apuesta: 0
         };
 
-        const response = defaultResponses[situacion as keyof typeof defaultResponses] || defaultResponses.general;
+        console.log('\n🤖 Dealer: Pensando...\n');
+        const response = await dealerService.generarRespuestaDealer(context, input);
         
-        console.log(`\n${DEALER_DOMINICANO.nombre}: "${response}"\n`);
+        console.log(`🤖 ${DEALER_DOMINICANO.nombre}:`);
+        console.log(`   "${response.contenido}"`);
+        
+        if (response.metadata) {
+          console.log(`   [Modelo: ${response.metadata.modelo || 'N/A'}]`);
+        } else if (!geminiConfigured) {
+          console.log('   [Respuesta predeterminada - IA deshabilitada]');
+        }
         
       } catch (error) {
-        console.error('❌ Error:', error);
+        console.error('\n❌ Error al generar respuesta:', error instanceof Error ? error.message : 'Error desconocido');
+        console.log('   Mostrando respuesta predeterminada...');
+        console.log('   "¡Eso está interesante! ¿Qué más quieres saber sobre el blackjack?"');
       }
 
       askQuestion();

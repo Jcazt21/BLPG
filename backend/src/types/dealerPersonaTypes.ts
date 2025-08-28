@@ -2,7 +2,7 @@
  * Tipos para la personalidad del dealer dominicano
  */
 
-export type TonoDealer = 'informal' | 'jocoso' | 'picante' | 'profesional';
+export type TonoDealer = 'informal' | 'jocoso' | 'picante' | 'profesional' | 'neutral';
 
 export interface BlackjackDealerPersona {
   nombre: string;
@@ -14,10 +14,14 @@ export interface BlackjackDealerPersona {
 }
 
 export interface DealerResponse {
-  mensaje: string;
+  contenido: string;
   tono_usado: TonoDealer;
-  frase_caracteristica?: string;
-  contexto_situacion: string;
+  contexto_usado: DealerPromptContext;
+  metadata?: {
+    modelo?: string;
+    tokens?: number;
+    timestamp?: number;
+  };
 }
 
 export interface DealerPromptContext {
@@ -26,4 +30,7 @@ export interface DealerPromptContext {
   resultado_mano?: string;
   apuesta_cantidad?: number;
   momento_juego?: string;
+  cartas_jugador?: string[];
+  cartas_dealer?: string[];
+  apuesta?: number;
 }
