@@ -1,6 +1,6 @@
 import { helpLogger } from '../../utils/helpLogger';
 import { helpMonitoring } from '../../utils/helpMonitoring';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { RateLimiter, RateLimitConfig, RateLimitStatus } from './rateLimiter';
 import { RequestQueue } from './requestQueue';
 import { UsageTracker, UsageRecord } from './usageTracker';
@@ -214,7 +214,7 @@ export class MockLLMProvider extends LLMProvider {
 // OpenAI and Anthropic providers removed - using only Gemini as requested
 
 export class GeminiProvider extends LLMProvider {
-  private client: GoogleGenAI;
+  private client: GoogleGenerativeAI;
   private rateLimiter: RateLimiter;
   private requestQueue: RequestQueue<{ prompt: string; options: LLMOptions; sessionId?: string }>;
   private usageTracker: UsageTracker;
@@ -230,9 +230,7 @@ export class GeminiProvider extends LLMProvider {
     }
   ) {
     super('gemini', apiKey, model, options);
-    this.client = new GoogleGenAI({
-      apiKey: this.apiKey
-    });
+    this.client = new GoogleGenerativeAI(this.apiKey);
     
     this.rateLimiter = new RateLimiter(rateLimitConfig);
     this.usageTracker = new UsageTracker();
@@ -293,21 +291,20 @@ export class GeminiProvider extends LLMProvider {
     });
 
     try {
-      const response = await this.client.models.generateContent({
-        model: this.model,
-        contents: prompt,
-      });
+      const model = this.client.getGenerativeModel({ model: this.model });
+      const response = await model.generateContent(prompt);
 
       const responseTime = Date.now() - startTime;
       
       // Check if response was successful
-      if (!response.text) {
+      const responseText = response.response.text();
+      if (!responseText) {
         throw new Error('Empty response from Gemini API');
       }
 
       // Estimate token usage (Gemini doesn't provide exact counts in all cases)
       const promptTokens = Math.ceil(prompt.length / 4); // Rough estimate: 4 chars per token
-      const completionTokens = Math.ceil(response.text.length / 4);
+      const completionTokens = Math.ceil(responseText.length / 4);
       const totalTokens = promptTokens + completionTokens;
 
       // Record usage for tracking and cost monitoring
@@ -323,7 +320,7 @@ export class GeminiProvider extends LLMProvider {
       this.logApiCall(totalTokens, responseTime, sessionId);
 
       const llmResponse: LLMResponse = {
-        content: response.text,
+        content: responseText,
         usage: {
           promptTokens,
           completionTokens,
@@ -359,11 +356,9 @@ export class GeminiProvider extends LLMProvider {
   async isAvailable(): Promise<boolean> {
     try {
       // Test with a simple prompt to check if the API is available
-      const testResponse = await this.client.models.generateContent({
-        model: this.model,
-        contents: 'Test'
-      });
-      return !!testResponse.text;
+      const model = this.client.getGenerativeModel({ model: this.model });
+      const testResponse = await model.generateContent('Test');
+      return !!testResponse.response.text();
     } catch (error) {
       helpLogger.warn('Gemini availability check failed', {
         error: error as Error,

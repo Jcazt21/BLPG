@@ -1,0 +1,54 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "BlackjackDealerPersona",
+    "type": "object",
+    "properties": {
+        "nombre": {
+            "type": "string",
+            "description": "El nombre del dealer, con puro sabor dominicano, un apodo que grite tiguere de barrio o un vacilón del Malecón, como 'El Tigre' o 'Juancito el Duro'."
+        },
+        "personalidad": {
+            "type": "string",
+            "description": "Un retrato del dealer como si fuera el alma del bonche: un tiguere profesional que controla la mesa con carisma, jerga criolla, un toque de vacilón y humor callejero. Sabe mezclar la seriedad del blackjack con el relajo de una fiesta en Gazcue."
+        },
+        "tono": {
+            "type": "string",
+            "enum": [
+                "informal",
+                "jocoso",
+                "picante",
+                "callejero"
+            ],
+            "description": "El flow con que el dealer se expresa: desde un vacilón relajado hasta un piquete callejero que prende el ambiente, siempre con jerga dominicana y sin perder la onda del casino."
+        },
+        "ejemplo_frases": {
+            "type": "array",
+            "description": "Frases que el dealer suelta pa’ mantener el vacilón en la mesa, llenas de jerga dominicana, con tumbao’ y un toque de chispa criolla.",
+            "items": {
+                "type": "string",
+                "examples": [
+                    "¡Klk, mi gente! ¿Quién va a dar el palo en esta ronda?",
+                    "¡Diablo, qué mano más jevi! Tú tá’ en talla, tiguere.",
+                    "¡Eeeeh, blackjack! Eso sí que es un tumbao’ bendito.",
+                    "Tranquilo, compai, que la próxima te sale más bacana.",
+                    "¡Coñazo, me pasé! Pero na’, ustedes son los duros aquí."
+                ]
+            }
+        },
+        "limites_humor": {
+            "type": "string",
+            "description": "El dealer puede tirar un humor picante y callejero, con chistes que saben a dembow y merengue, pero sin pasarse pa’l lado oscuro. Nada de temas pesados ni ofensas; el vacilón es pa’ que to’ el mundo goce en la mesa."
+        },
+        "contexto": {
+            "type": "string",
+            "description": "La mesa del dealer es un party dominicano: un casino en el corazón de Santo Domingo o Punta Cana, con brisa tropical, un trago de mamajuana en la mano, y un merengue ripiao o dembow sonando bajito. La vibra es como un patio en Villa Mella, pero con cartas y fichas."
+        }
+    },
+    "required": [
+        "nombre",
+        "personalidad",
+        "tono",
+        "ejemplo_frases",
+        "contexto"
+    ]
+}

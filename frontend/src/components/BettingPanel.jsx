@@ -7,13 +7,13 @@ const BettingPanel = React.memo(function BettingPanel({
   balance, 
   currentBet, 
   onChipClick, 
-  onAllIn, 
   onClearBet, 
   onPlaceBet, 
   disabled = false,
   showPlaceBetButton = false,
   noChipsMessage = '',
   bettingTimeLeft = 0,
+  autoBetCountdown = 0,
   minBet = 25,
   maxBet = null,
   isConnected = true,
@@ -64,18 +64,13 @@ const BettingPanel = React.memo(function BettingPanel({
     onChipClick(value);
   }, [onChipClick, canBet, currentBet, effectiveMaxBet, minBet]);
 
-  const handleAllIn = useCallback(() => {
-    if (!canBet || balance === 0) return;
-    onAllIn();
-  }, [onAllIn, canBet, balance]);
-
   const handleClearBet = useCallback(() => {
     if (disabled || currentBet === 0) return;
     onClearBet();
   }, [onClearBet, disabled, currentBet]);
 
   const handlePlaceBet = useCallback(() => {
-    if (!canBet || currentBet === 0 || currentBet > balance) return;
+    if (!canBet || currentBet > balance) return;
     onPlaceBet();
   }, [onPlaceBet, canBet, currentBet, balance]);
 
@@ -94,25 +89,12 @@ const BettingPanel = React.memo(function BettingPanel({
     }
   }, [onRetryBet, isRetrying]);
 
-  // Generate dynamic chip values based on player's balance
+  // Generate chip values - fixed set without dynamic balance chips
   const chipValues = useMemo(() => {
-    const availableBalance = balance + currentBet; // Total available funds
-    const dynamicChips = [...BASE_CHIP_VALUES];
-    
-    // Add a chip for the player's current balance if it's different from base values
-    if (availableBalance > 500 && !BASE_CHIP_VALUES.includes(availableBalance)) {
-      // Round down to nearest 25 for cleaner display
-      const balanceChip = Math.floor(availableBalance / 25) * 25;
-      if (balanceChip > 500 && balanceChip <= availableBalance) {
-        dynamicChips.push(balanceChip);
-      }
-    }
-    
-    // Sort chips in ascending order and filter out chips that would exceed max bet
-    return dynamicChips
-      .sort((a, b) => a - b)
+    // Use only the base chip values, no dynamic balance chips
+    return BASE_CHIP_VALUES
       .filter(value => currentBet + value <= effectiveMaxBet);
-  }, [balance, currentBet, effectiveMaxBet]);
+  }, [currentBet, effectiveMaxBet]);
 
   // Memoize chip buttons to prevent unnecessary re-renders
   const chipButtons = useMemo(() => {
@@ -153,20 +135,6 @@ const BettingPanel = React.memo(function BettingPanel({
         </div>
         <div className="chip-buttons">
           {chipButtons}
-          <button 
-            className={`chip all-in ${!canBet || balance === 0 ? 'chip-disabled' : ''}`}
-            disabled={!canBet || balance === 0} 
-            onClick={handleAllIn}
-            title={
-              balance === 0 ? 'No balance available' :
-              !isConnected ? 'Connection lost' :
-              bettingTimeLeft <= 0 ? 'Betting time expired' :
-              betConfirmed ? 'Bet already confirmed' :
-              ''
-            }
-          >
-            ALL IN
-          </button>
         </div>
       </div>
 
@@ -175,9 +143,23 @@ const BettingPanel = React.memo(function BettingPanel({
           BET: {currentBet}
           {betConfirmed && <span className="confirmed-indicator"> ✓</span>}
         </div>
-        {bettingTimeLeft > 0 && (
+        {autoBetCountdown > 0 && !betConfirmed && (
+          <div className={`auto-bet-timer ${autoBetCountdown <= 3 ? 'urgent' : ''}`} style={{
+            color: autoBetCountdown <= 3 ? '#ff4444' : '#ffa500',
+            fontWeight: 'bold',
+            fontSize: '0.9rem',
+            textAlign: 'center',
+            padding: '0.25rem',
+            backgroundColor: autoBetCountdown <= 3 ? 'rgba(255, 68, 68, 0.1)' : 'rgba(255, 165, 0, 0.1)',
+            borderRadius: '4px',
+            marginTop: '0.25rem'
+          }}>
+            Auto-bet: {Math.ceil(autoBetCountdown)}s
+          </div>
+        )}
+        {bettingTimeLeft > 0 && autoBetCountdown === 0 && !betConfirmed && (
           <div className="betting-timer">
-            Time: {Math.ceil(bettingTimeLeft / 1000)}s
+            Betting Phase Active
           </div>
         )}
       </div>
@@ -195,9 +177,11 @@ const BettingPanel = React.memo(function BettingPanel({
           <button
             className={`place-bet-btn ${betConfirmed ? 'confirmed' : ''}`}
             onClick={handlePlaceBet}
-            disabled={!canBet || currentBet === 0 || currentBet > balance}
+            disabled={!canBet || currentBet > balance}
           >
-            {betConfirmed ? 'Bet Placed' : 'Place Bet'}
+            {betConfirmed ? 'Bet Placed' : 
+             currentBet === 0 ? 'Place Bet (25)' : 
+             `Place Bet (${currentBet})`}
           </button>
         )}
         

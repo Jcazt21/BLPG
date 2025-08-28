@@ -2,8 +2,8 @@ const { io } = require('socket.io-client');
 const dotenv = require('dotenv');
 const path = require('path');
 
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+// Load environment variables from project root
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Build server URL from environment variables
 const HOST = process.env.HOST || 'localhost';

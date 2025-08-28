@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CasinoTable } from './index';
 import BettingPanel from './BettingPanel';
 import { HelpButton, HelpChat } from './help';
@@ -8,9 +8,20 @@ import { io } from 'socket.io-client';
 import { ConfigManager } from '../config/environment';
 
 // Load and validate configuration
+console.log('🔍 Environment variables:', {
+  VITE_HOST: import.meta.env.VITE_HOST,
+  VITE_BACKEND_PORT: import.meta.env.VITE_BACKEND_PORT,
+  VITE_FRONTEND_PORT: import.meta.env.VITE_FRONTEND_PORT,
+  MODE: import.meta.env.MODE
+});
+
 const config = ConfigManager.validate();
+console.log('🔧 Final config:', config);
+
 const API_URL = config.API_URL;
 const WS_URL = config.WS_URL;
+console.log('🌐 Socket connecting to:', WS_URL);
+
 const socket = io(WS_URL, { autoConnect: false });
 
 function BlackjackGame() {
@@ -204,52 +215,95 @@ function BlackjackGame() {
     setError('')
   }
 
+  // Local betting state
+  const [pendingBet, setPendingBet] = useState(0);
+  const [autoBetTimeout, setAutoBetTimeout] = useState(null);
+  const [autoBetCountdown, setAutoBetCountdown] = useState(0);
+
   // Betting functions
   const handleChipClick = useCallback((chipValue) => {
     if (!multiGameState || multiGameState.phase !== 'betting') return;
     
     const myPlayer = multiGameState.players.find(p => p.id === socketId);
-    if (!myPlayer) return;
+    if (!myPlayer || myPlayer.hasPlacedBet) return;
 
-    const newBetAmount = (myPlayer.currentBet || 0) + chipValue;
+    const newBetAmount = pendingBet + chipValue;
     
-    if (newBetAmount > myPlayer.balance + (myPlayer.currentBet || 0)) {
+    if (newBetAmount > myPlayer.balance) {
       setBetError('Insufficient balance');
       return;
     }
 
-    setIsPlacingBet(true);
-    setBetError('');
-    socket.emit('placeBet', {
-      code: joinedRoom,
-      amount: newBetAmount
-    });
-  }, [multiGameState, socketId, joinedRoom]);
+    if (newBetAmount > 2000) {
+      setBetError('Maximum bet is 2000 chips');
+      return;
+    }
 
-  const handleAllIn = useCallback(() => {
+    setPendingBet(newBetAmount);
+    setBetError('');
+  }, [multiGameState, socketId, pendingBet]);
+
+
+
+  const handleClearBet = useCallback(() => {
     if (!multiGameState || multiGameState.phase !== 'betting') return;
     
     const myPlayer = multiGameState.players.find(p => p.id === socketId);
     if (!myPlayer) return;
 
-    setIsPlacingBet(true);
-    setBetError('');
-    socket.emit('placeBet', {
-      code: joinedRoom,
-      amount: myPlayer.balance + (myPlayer.currentBet || 0)
-    });
+    if (myPlayer.hasPlacedBet) {
+      // If bet is already placed, clear it on server
+      setIsPlacingBet(true);
+      setBetError('');
+      socket.emit('clearBet', {
+        code: joinedRoom
+      });
+    } else {
+      // If bet is only pending, clear locally
+      setPendingBet(0);
+      setBetError('');
+    }
   }, [multiGameState, socketId, joinedRoom]);
+   
 
-  const handleClearBet = useCallback(() => {
+  const handlePlaceBet = useCallback(() => {
     if (!multiGameState || multiGameState.phase !== 'betting') return;
     
+    const myPlayer = multiGameState.players.find(p => p.id === socketId);
+    if (!myPlayer || myPlayer.hasPlacedBet) return;
+
+    const betAmount = pendingBet || 25; // Default to 25 if no bet selected
+    
+    if (betAmount > myPlayer.balance) {
+      setBetError('Insufficient balance');
+      return;
+    }
+
+    if (betAmount > 2000) {
+      setBetError('Maximum bet is 2000 chips');
+      return;
+    }
+
+    if (betAmount < 25) {
+      setBetError('Minimum bet is 25 chips');
+      return;
+    }
+
     setIsPlacingBet(true);
     setBetError('');
-    socket.emit('clearBet', {
-      code: joinedRoom
+    
+    // Clear auto-bet timeout and countdown
+    if (autoBetTimeout) {
+      clearTimeout(autoBetTimeout);
+      setAutoBetTimeout(null);
+    }
+    setAutoBetCountdown(0);
+
+    socket.emit('placeBet', {
+      code: joinedRoom,
+      amount: betAmount
     });
-  }, [multiGameState, joinedRoom]);
-   
+  }, [multiGameState, socketId, joinedRoom, pendingBet, autoBetTimeout]);
 
   const placeBet = () => {
     handleStart()
@@ -260,6 +314,75 @@ function BlackjackGame() {
       setNextRoundReady(true)
     }
   }, [status])
+
+  // Auto-bet timeout effect
+  useEffect(() => {
+    if (!multiGameState || multiGameState.phase !== 'betting') {
+      // Clear timeout when not in betting phase
+      if (autoBetTimeout) {
+        clearTimeout(autoBetTimeout);
+        setAutoBetTimeout(null);
+      }
+      setAutoBetCountdown(0);
+      setPendingBet(0);
+      return;
+    }
+
+    const myPlayer = multiGameState.players.find(p => p.id === socketId);
+    if (!myPlayer || myPlayer.hasPlacedBet) {
+      setAutoBetCountdown(0);
+      return;
+    }
+
+    // Start countdown from 10 seconds
+    setAutoBetCountdown(10);
+    
+    // Update countdown every second
+    const countdownInterval = setInterval(() => {
+      setAutoBetCountdown(prev => {
+        const newValue = prev - 1;
+        return newValue <= 0 ? 0 : newValue;
+      });
+    }, 1000);
+
+    // Set auto-bet timeout for 10 seconds
+    const timeout = setTimeout(() => {
+      console.log('Auto-betting due to timeout');
+      setIsPlacingBet(true);
+      setBetError('');
+      
+      // Use pending bet if selected, otherwise default to 25
+      const betAmount = pendingBet > 0 ? pendingBet : 25;
+      
+      socket.emit('placeBet', {
+        code: joinedRoom,
+        amount: betAmount
+      });
+      
+      setAutoBetCountdown(0);
+    }, 10000);
+
+    setAutoBetTimeout(timeout);
+
+    // Cleanup timeout and interval on unmount or phase change
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(countdownInterval);
+      setAutoBetTimeout(null);
+      setAutoBetCountdown(0);
+    };
+  }, [multiGameState?.phase, socketId, joinedRoom, multiGameState?.players, pendingBet]);
+
+  // Reset pending bet when bet is placed
+  useEffect(() => {
+    if (!multiGameState) return;
+    
+    const myPlayer = multiGameState.players.find(p => p.id === socketId);
+    if (myPlayer?.hasPlacedBet) {
+      setPendingBet(0);
+      setIsPlacingBet(false);
+    }
+  }, [multiGameState?.players, socketId]);
 
   // Card rendering helper
   const renderCard = (card, idx, isDealer = false) => (
@@ -509,14 +632,16 @@ function BlackjackGame() {
                   <div className="betting-section">
                     <BettingPanel
                       balance={myPlayer.balance || 0}
-                      currentBet={myPlayer.currentBet || 0}
+                      currentBet={myPlayer.hasPlacedBet ? (myPlayer.currentBet || 0) : pendingBet}
                       onChipClick={handleChipClick}
-                      onAllIn={handleAllIn}
                       onClearBet={handleClearBet}
-                      disabled={isPlacingBet || myPlayer.hasPlacedBet}
+                      onPlaceBet={handlePlaceBet}
+                      disabled={isPlacingBet}
+                      showPlaceBetButton={!myPlayer.hasPlacedBet}
                       bettingTimeLeft={bettingTimeLeft}
+                      autoBetCountdown={autoBetCountdown}
                       minBet={25}
-                      maxBet={null}
+                      maxBet={2000}
                       isConnected={socket.connected}
                       betConfirmed={myPlayer.hasPlacedBet}
                     />
@@ -528,6 +653,37 @@ function BlackjackGame() {
                         fontSize: '0.9rem'
                       }}>
                         {betError}
+                      </div>
+                    )}
+                    
+                    {!myPlayer.hasPlacedBet && autoBetCountdown > 0 && (
+                      <div className="auto-bet-countdown" style={{
+                        color: autoBetCountdown <= 3 ? '#ff4444' : '#ffa500',
+                        textAlign: 'center',
+                        marginTop: '0.5rem',
+                        fontSize: '0.9rem',
+                        fontWeight: 'bold',
+                        padding: '0.5rem',
+                        backgroundColor: 'rgba(0,0,0,0.3)',
+                        borderRadius: '4px',
+                        border: `2px solid ${autoBetCountdown <= 3 ? '#ff4444' : '#ffa500'}`
+                      }}>
+                        {autoBetCountdown <= 3 ? 
+                          `Auto-betting ${pendingBet > 0 ? pendingBet : 25} chips in ${Math.ceil(autoBetCountdown)}s` : 
+                          `Auto-bet in ${Math.ceil(autoBetCountdown)}s (${pendingBet > 0 ? pendingBet : 25} chips)`
+                        }
+                      </div>
+                    )}
+                    
+                    {!myPlayer.hasPlacedBet && autoBetCountdown === 0 && bettingTimeLeft > 0 && (
+                      <div className="betting-instructions" style={{
+                        color: '#00ff88',
+                        textAlign: 'center',
+                        marginTop: '0.5rem',
+                        fontSize: '0.8rem',
+                        fontStyle: 'italic'
+                      }}>
+                        Select chips and click "Place Bet"
                       </div>
                     )}
                   </div>

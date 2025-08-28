@@ -52,7 +52,7 @@ export class HelpAssistantConfigManager {
 
   private loadConfig(): void {
     const envConfig = ConfigManager.get();
-    
+
     this.config = {
       enabled: envConfig.HELP_ASSISTANT.ENABLED,
       provider: envConfig.HELP_ASSISTANT.PROVIDER,
@@ -98,7 +98,7 @@ export class HelpAssistantConfigManager {
     }
 
     const provider = this.config.provider;
-    
+
     if (provider === 'mock') {
       return {
         name: 'mock',
