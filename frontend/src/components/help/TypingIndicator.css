@@ -1,0 +1,177 @@
+/* Typing Indicator */
+.typing-indicator {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  opacity: 0.8;
+}
+
+/* Avatar */
+.typing-avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #4caf50;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Content */
+.typing-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Typing Bubble */
+.typing-bubble {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  border-bottom-left-radius: 4px;
+  padding: 0.75rem 1rem;
+  display: inline-block;
+  min-width: 60px;
+}
+
+/* Typing Dots Animation */
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #666;
+  animation: typingDot 1.4s infinite ease-in-out;
+}
+
+.dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  30% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Typing Text */
+.typing-text {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.25rem;
+  padding-left: 1rem;
+  font-style: italic;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .typing-indicator {
+    gap: 0.5rem;
+  }
+  
+  .typing-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .typing-bubble {
+    padding: 0.625rem 0.875rem;
+    min-width: 50px;
+  }
+  
+  .dot {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .typing-text {
+    font-size: 0.6875rem;
+    padding-left: 0.875rem;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .typing-bubble {
+    border: 2px solid #333;
+    background: white;
+  }
+  
+  .dot {
+    background: #000;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    animation: none;
+    opacity: 0.7;
+  }
+  
+  .typing-bubble {
+    background: #f0f0f0;
+  }
+}
+
+/* Pulse animation for the entire indicator */
+.typing-indicator {
+  animation: typingPulse 2s infinite ease-in-out;
+}
+
+@keyframes typingPulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing-indicator {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
+/* Focus styles for accessibility */
+.typing-indicator:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

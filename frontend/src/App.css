@@ -902,6 +902,7 @@ body {
   .control-buttons {
     display: flex;
     gap: 0.75rem;
+    align-items: center;
   }
 
   .control-btn {

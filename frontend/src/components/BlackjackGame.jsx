@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CasinoTable } from './index';
+import { HelpButton, HelpChat } from './help';
 import PlayingCard from '../PlayingCard';
 import logo from '../assets/logo.png';
 import { io } from 'socket.io-client';
@@ -37,6 +38,7 @@ function BlackjackGame() {
   const [startError, setStartError] = useState('');
   const [startLoading, setStartLoading] = useState(false);
   const [gameMode, setGameMode] = useState('multi'); // Go directly to multiplayer
+  const [isHelpChatOpen, setIsHelpChatOpen] = useState(false);
 
   // Now it's safe to use socketId and creatorId
   const isCreator = socketId && creatorId && socketId === creatorId;
@@ -359,6 +361,11 @@ function BlackjackGame() {
 
                 <div className="casino-controls">
                   <div className="control-buttons">
+                    <HelpButton 
+                      onOpen={() => setIsHelpChatOpen(true)}
+                      disabled={false}
+                    />
+
                     {isResult && isCreator && (
                       <button className="control-btn next-btn" onClick={() => {
                         socket.emit('restartGameInRoom', joinedRoom);
@@ -440,6 +447,13 @@ function BlackjackGame() {
                   </div>
                 )}
               </div>
+
+              {/* Help Chat */}
+              <HelpChat
+                isOpen={isHelpChatOpen}
+                onClose={() => setIsHelpChatOpen(false)}
+                roomCode={joinedRoom}
+              />
             </div>
           );
         } else {

@@ -1,0 +1,274 @@
+/* Chat Input Form */
+.chat-input-form {
+  width: 100%;
+}
+
+.chat-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chat-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  transition: border-color 0.2s ease;
+}
+
+.chat-input-wrapper:focus-within {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+/* Textarea */
+.chat-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  padding: 0;
+  background: transparent;
+  min-height: 20px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.chat-input::placeholder {
+  color: #999;
+}
+
+.chat-input:disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.chat-input.invalid {
+  color: #d32f2f;
+}
+
+/* Custom scrollbar for textarea */
+.chat-input::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-input::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-input::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
+}
+
+/* Send Button */
+.send-button {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.send-button.enabled {
+  background: #1976d2;
+  color: white;
+}
+
+.send-button.enabled:hover {
+  background: #1565c0;
+  transform: translateY(-1px);
+}
+
+.send-button.enabled:active {
+  transform: translateY(0);
+}
+
+.send-button.disabled {
+  background: #f5f5f5;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.send-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.3);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Footer */
+.chat-input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0.25rem;
+}
+
+.input-hints {
+  flex: 1;
+}
+
+.hint-text {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+/* Character Count */
+.char-count {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: right;
+}
+
+.char-count.warning {
+  color: #ff9800;
+}
+
+.char-count.error {
+  color: #f44336;
+  font-weight: 600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .chat-input-wrapper {
+    padding: 0.625rem;
+    gap: 0.5rem;
+  }
+  
+  .chat-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .send-button {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .hint-text {
+    display: none; /* Hide hints on mobile to save space */
+  }
+  
+  .char-count {
+    font-size: 0.6875rem;
+  }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chat-input {
+    font-size: 0.875rem;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .chat-input-wrapper {
+    border: 3px solid #000;
+  }
+  
+  .chat-input-wrapper:focus-within {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px #1976d2;
+  }
+  
+  .send-button.enabled {
+    border: 2px solid #000;
+  }
+  
+  .send-button.disabled {
+    border: 2px solid #ccc;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .chat-input-wrapper {
+    transition: none;
+  }
+  
+  .send-button {
+    transition: none;
+  }
+  
+  .send-button.enabled:hover {
+    transform: none;
+  }
+  
+  .loading-spinner svg {
+    animation: none;
+  }
+}
+
+/* Error state for invalid input */
+.chat-input-wrapper.error {
+  border-color: #f44336;
+}
+
+.chat-input-wrapper.error:focus-within {
+  border-color: #f44336;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+}
+
+/* Success state when message is valid */
+.chat-input-wrapper.valid {
+  border-color: #4caf50;
+}
+
+/* Focus management */
+.chat-input:focus {
+  outline: none;
+}
+
+/* Accessibility improvements */
+.send-button[aria-disabled="true"] {
+  pointer-events: none;
+}
+
+/* Animation for character count changes */
+.char-count {
+  transition: color 0.2s ease;
+}
+
+/* Placeholder animation */
+.chat-input::placeholder {
+  transition: opacity 0.2s ease;
+}
+
+.chat-input:focus::placeholder {
+  opacity: 0.7;
+}
