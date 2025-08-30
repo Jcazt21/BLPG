@@ -103,7 +103,8 @@ describe('ResponseValidator', () => {
 
       const result = validator.validateSchema(invalidResponse);
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(error => error.includes('maxLength') || error.includes('maximum'))).toBe(true);
+      console.log('Validation errors:', result.errors);
+      expect(result.errors.some(error => error.includes('maxLength') || error.includes('maximum') || error.includes('must NOT have more than'))).toBe(true);
     });
 
     it('should reject response with empty content', () => {
@@ -117,7 +118,8 @@ describe('ResponseValidator', () => {
 
       const result = validator.validateSchema(invalidResponse);
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(error => error.includes('minLength') || error.includes('minimum'))).toBe(true);
+      console.log('Validation errors:', result.errors);
+      expect(result.errors.some(error => error.includes('minLength') || error.includes('minimum') || error.includes('must NOT have fewer than'))).toBe(true);
     });
 
     it('should validate metadata structure when present', () => {

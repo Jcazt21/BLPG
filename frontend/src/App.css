@@ -9,6 +9,11 @@ body {
   font-family: 'Segoe UI', 'Arial', sans-serif;
   background: #232b23;
   color: #e0e0e0;
+  /* Safe area support for mobile devices with curved edges */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Betting panel styles */
@@ -923,9 +928,55 @@ body {
     color: #232b23;
   }
 
+  .control-btn.next-btn.pulsing {
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(182, 226, 161, 0.7);
+    }
+    70% {
+      transform: scale(1.05);
+      box-shadow: 0 0 0 10px rgba(182, 226, 161, 0);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(182, 226, 161, 0);
+    }
+  }
+
+  /* Critical countdown animation for betting timers */
+  @keyframes pulse-critical {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    }
+    50% {
+      transform: scale(1.1);
+      box-shadow: 0 0 0 8px rgba(255, 0, 0, 0.3);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+  }
+
+  .control-btn.spectate-btn {
+    background: #ffb74d;
+    color: #232b23;
+  }
+
   .control-btn.leave-btn {
     background: #e57373;
     color: #fff;
+  }
+
+  .no-chips-options {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
   }
 
   .control-btn.menu-btn {
@@ -1016,16 +1067,121 @@ body {
     }
   }
 
+  /* Mobile-specific improvements for curved edge devices */
   @media (max-width: 600px) {
     .betting-section {
-      margin: 0 0.25rem;
-      padding: 0.2rem;
+      margin: 0 0.5rem;
+      padding: 0.3rem;
+      /* Safe area for curved edges and navigation bars */
+      margin-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
+      /* Ensure betting panel is not too close to bottom */
+      position: relative;
+      bottom: 0;
+    }
+    
+    /* Enhanced action buttons for mobile visibility */
+    .action-buttons {
+      gap: 1rem;
+      margin: 1rem 0;
+      padding: 0.5rem;
     }
     
     .action-btn {
-      padding: 0.3rem 0.6rem;
-      font-size: 0.75rem;
-      min-width: 60px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      min-width: 100px;
+      min-height: 48px; /* Touch-friendly size */
+      border-radius: 0.75rem;
+      /* Enhanced visibility */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border: 2px solid transparent;
+    }
+    
+    .action-btn.hit-btn {
+      background: #ffd54f;
+      color: #232b23;
+      border-color: #e6c547;
+    }
+    
+    .action-btn.stand-btn {
+      background: #3b4cca;
+      color: #fff;
+      border-color: #2c3a9a;
+    }
+    
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+  }
+
+  /* Extra small mobile devices (iPhone SE, etc.) */
+  @media (max-width: 480px) {
+    .betting-section {
+      margin: 0 0.75rem;
+      padding: 0.4rem;
+      /* Increased bottom margin for very small screens */
+      margin-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+      /* Slightly higher positioning */
+      transform: translateY(-0.5rem);
+    }
+    
+    /* Extra large action buttons for small screens */
+    .action-buttons {
+      gap: 1.25rem;
+      margin: 1.25rem 0;
+      padding: 0.75rem;
+    }
+    
+    .action-btn {
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      min-width: 120px;
+      min-height: 52px; /* Extra touch-friendly size */
+      border-radius: 1rem;
+      /* Maximum visibility for small screens */
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+      border: 3px solid transparent;
+    }
+    
+    .action-btn.hit-btn {
+      background: linear-gradient(135deg, #ffd54f 0%, #ffeb3b 100%);
+      color: #232b23;
+      border-color: #e6c547;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    .action-btn.stand-btn {
+      background: linear-gradient(135deg, #3b4cca 0%, #5c6bc0 100%);
+      color: #fff;
+      border-color: #2c3a9a;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  /* Landscape orientation on mobile */
+  @media (max-width: 900px) and (orientation: landscape) {
+    .betting-section {
+      margin: 0 1rem;
+      padding: 0.2rem;
+      /* Reduced bottom margin in landscape */
+      margin-bottom: max(0.25rem, env(safe-area-inset-bottom, 0.25rem));
+    }
+    
+    /* Compact action buttons for landscape */
+    .action-buttons {
+      gap: 0.75rem;
+      margin: 0.5rem 0;
+      padding: 0.25rem;
+    }
+    
+    .action-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      min-width: 80px;
+      min-height: 40px;
+      border-radius: 0.5rem;
     }
   }
 
@@ -1036,12 +1192,140 @@ body {
 
   .casino-footer {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 0.5rem 1rem;
     background: rgba(0, 0, 0, 0.3);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 40px;
+    min-height: 120px; /* Increased to accommodate buttons */
+    /* Safe area support for mobile devices */
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+  }
+
+  /* Mobile-specific casino footer adjustments */
+  @media (max-width: 600px) {
+    .casino-footer {
+      padding: 0.75rem 0.5rem;
+      /* Increased bottom padding for mobile safety */
+      padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
+      min-height: 140px; /* Increased to show buttons fully */
+    }
+  }
+
+  /* Extra safety for very small screens */
+  @media (max-width: 480px) {
+    .casino-footer {
+      padding: 1rem 0.75rem;
+      padding-bottom: max(2rem, env(safe-area-inset-bottom, 2rem));
+      min-height: 160px; /* Increased significantly for button visibility */
+    }
+  }
+
+  /* Mobile Action Buttons - Large and prominent like in Figma design */
+  .mobile-action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem 0;
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    /* Ensure buttons are always visible */
+    position: relative;
+    z-index: 10;
+  }
+
+  .mobile-action-btn {
+    flex: 1;
+    min-height: 60px;
+    max-height: 80px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 120px;
+  }
+
+  .mobile-hit-btn {
+    background: linear-gradient(135deg, #ffd54f 0%, #ffeb3b 100%);
+    color: #232b23;
+    border: 2px solid #e6c547;
+  }
+
+  .mobile-stand-btn {
+    background: linear-gradient(135deg, #3b4cca 0%, #5c6bc0 100%);
+    color: #fff;
+    border: 2px solid #2c3a9a;
+  }
+
+  .mobile-action-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  .mobile-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Responsive adjustments for mobile action buttons */
+  @media (max-width: 600px) {
+    .mobile-action-buttons {
+      gap: 1.5rem;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    
+    .mobile-action-btn {
+      min-height: 70px;
+      font-size: 1.3rem;
+      border-radius: 15px;
+      min-width: 140px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .mobile-action-buttons {
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      margin: 0.5rem 0.5rem 1rem 0.5rem;
+      /* Ensure buttons are always visible above safe area */
+      margin-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+    }
+    
+    .mobile-action-btn {
+      min-height: 60px;
+      font-size: 1.1rem;
+      border-radius: 12px;
+      min-width: 120px;
+      /* Ensure buttons are above any system UI */
+      position: relative;
+      z-index: 20;
+    }
+  }
+
+  /* Landscape orientation adjustments */
+  @media (max-width: 900px) and (orientation: landscape) {
+    .mobile-action-buttons {
+      gap: 0.75rem;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+    }
+    
+    .mobile-action-btn {
+      min-height: 50px;
+      font-size: 1rem;
+      min-width: 100px;
+    }
   }
 
   .results-summary {

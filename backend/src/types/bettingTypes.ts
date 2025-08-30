@@ -168,7 +168,7 @@ export type GameResultStatus = 'win' | 'lose' | 'draw' | 'bust' | 'blackjack';
 export const BETTING_CONSTANTS = {
   INITIAL_BALANCE: 2000, // Updated to 2000 chips as per requirement 1.1
   MIN_BET: 25,
-  BETTING_TIME_SECONDS: 30,
+  BETTING_TIME_SECONDS: 15, // Updated from 30s to 15s for faster gameplay
   PAYOUT_MULTIPLIERS: {
     WIN: 2,
     BLACKJACK: 2.5,

@@ -137,3 +137,26 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Project-specific ignores
+# Backup directories created during migrations
+backup-*/
+*-backup/
+
+# Temporary migration files
+*.migration.tmp
+migration-*.tmp
+
+# IDE and editor temporary files
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

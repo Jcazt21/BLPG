@@ -1,3 +1,15 @@
+// Load environment variables for tests
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load .env file from project root
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Set required environment variables for tests if not present
+if (!process.env.HOST) {
+  process.env.HOST = 'localhost';
+}
+
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
 import io from 'socket.io-client';

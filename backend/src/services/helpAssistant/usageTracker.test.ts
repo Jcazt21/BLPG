@@ -1,3 +1,15 @@
+// Load environment variables for tests
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load .env file from project root
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
+// Set required environment variables for tests if not present
+if (!process.env.HOST) {
+  process.env.HOST = 'localhost';
+}
+
 import { UsageTracker } from './usageTracker';
 
 describe('UsageTracker', () => {
@@ -52,7 +64,7 @@ describe('UsageTracker', () => {
       expect(stats.totalRequests).toBe(3);
       expect(stats.totalTokens).toBe(675); // (100+50) + (200+100) + (150+75)
       expect(stats.averageTokensPerRequest).toBe(225);
-      expect(stats.averageResponseTime).toBe(1233.33); // (1000+1500+1200)/3
+      expect(stats.averageResponseTime).toBeCloseTo(1233.33, 2); // (1000+1500+1200)/3
       expect(stats.totalCost).toBeGreaterThan(0);
     });
 

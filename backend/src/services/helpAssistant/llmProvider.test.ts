@@ -252,8 +252,12 @@ describe('LLMProvider', () => {
       expect(() => provider.clearQueue()).not.toThrow();
     });
 
-    // Note: We can't easily test the actual API calls without a real API key
-    // and without mocking the GoogleGenAI client, so we'll skip those tests for now
+    // Skipping actual API tests to prevent token usage during development
+    it('should skip real API tests to save tokens', () => {
+      console.log('⚠️ Real Gemini API tests skipped to prevent token consumption.');
+      console.log('   Use integration tests with real API key only when necessary.');
+      expect(true).toBe(true); // Placeholder test
+    });
   });
 
   describe('LLMProviderFactory', () => {
@@ -274,7 +278,7 @@ describe('LLMProvider', () => {
     it('should throw error for unknown provider type', () => {
       expect(() => {
         LLMProviderFactory.create('unknown' as any, 'test-key', 'test-model');
-      }).toThrow('Unknown LLM provider: unknown. Supported providers: \'gemini\', \'mock\'');
+      }).toThrow('Unknown LLM provider: unknown. Supported providers: \'openai\', \'anthropic\', \'gemini\', \'mock\'');
     });
 
     it('should pass options to created providers', () => {

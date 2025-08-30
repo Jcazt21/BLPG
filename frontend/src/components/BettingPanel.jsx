@@ -144,15 +144,18 @@ const BettingPanel = React.memo(function BettingPanel({
           {betConfirmed && <span className="confirmed-indicator"> ✓</span>}
         </div>
         {autoBetCountdown > 0 && !betConfirmed && (
-          <div className={`auto-bet-timer ${autoBetCountdown <= 3 ? 'urgent' : ''}`} style={{
-            color: autoBetCountdown <= 3 ? '#ff4444' : '#ffa500',
+          <div className={`auto-bet-timer ${autoBetCountdown <= 5 ? 'critical' : autoBetCountdown <= 8 ? 'urgent' : ''}`} style={{
+            color: autoBetCountdown <= 5 ? '#ff0000' : autoBetCountdown <= 8 ? '#ff4444' : '#ffa500',
             fontWeight: 'bold',
-            fontSize: '0.9rem',
+            fontSize: autoBetCountdown <= 5 ? '1.1rem' : '0.9rem',
             textAlign: 'center',
             padding: '0.25rem',
-            backgroundColor: autoBetCountdown <= 3 ? 'rgba(255, 68, 68, 0.1)' : 'rgba(255, 165, 0, 0.1)',
+            backgroundColor: autoBetCountdown <= 5 ? 'rgba(255, 0, 0, 0.2)' : autoBetCountdown <= 8 ? 'rgba(255, 68, 68, 0.1)' : 'rgba(255, 165, 0, 0.1)',
             borderRadius: '4px',
-            marginTop: '0.25rem'
+            marginTop: '0.25rem',
+            border: autoBetCountdown <= 5 ? '2px solid #ff0000' : autoBetCountdown <= 8 ? '1px solid #ff4444' : 'none',
+            animation: autoBetCountdown <= 5 ? 'pulse-critical 0.5s infinite' : 'none',
+            textShadow: autoBetCountdown <= 5 ? '0 0 10px #ff0000' : 'none'
           }}>
             Auto-bet: {Math.ceil(autoBetCountdown)}s
           </div>

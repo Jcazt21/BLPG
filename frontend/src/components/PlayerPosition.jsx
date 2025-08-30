@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import PlayingCard from '../PlayingCard';
+import CardStack from './CardStack';
 import './PlayerPosition.css';
 
 const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTurn = false, showCards = true, isCurrentPlayer = false, gamePhase = 'waiting' }) {
@@ -52,15 +53,15 @@ const PlayerPosition = React.memo(function PlayerPosition({ player, isCurrentTur
   const renderedCards = useMemo(() => {
     if (!showCards || !player.cards || player.cards.length === 0) return null;
 
-    return player.cards.map((card, idx) => (
-      <PlayingCard
-        key={`${card.value}-${card.suit}-${idx}`}
-        value={card.value}
-        suit={card.suit}
-        faceDown={false}
-        flipped={true}
+    return (
+      <CardStack 
+        cards={player.cards} 
+        maxVisible={5}
+        compactOffset={18}
+        expandedOffset={35}
+        animationDuration={180}
       />
-    ));
+    );
   }, [showCards, player.cards]);
 
   return (

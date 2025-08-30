@@ -8,6 +8,11 @@
     "start": "node dist/index.js",
     "start:prod": "npm run build && npm start",
     "test": "jest",
+    "test:help": "node scripts/test-help-minimal.js",
+    "test:help:minimal": "node scripts/test-help-minimal.js",
+    "test:help:integration": "node scripts/test-help-integration.js",
+    "test:help:gemini": "ts-node src/tests/help-gemini-simple.ts",
+    "test:help:chat": "ts-node src/tests/help-gemini-interactive.ts",
     "test:gemini": "ts-node src/tests/gemini-test.ts",
     "test:gemini:interactive": "ts-node src/tests/gemini-test.ts --interactive",
     "chat:dealer": "ts-node src/tests/interactive-dealer-chat.ts"

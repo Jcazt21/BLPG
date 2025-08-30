@@ -48,6 +48,9 @@ function BlackjackGame() {
   const [creatorId, setCreatorId] = useState(null)
   const [multiGameState, setMultiGameState] = useState(null)
   const [startError, setStartError] = useState('');
+  const [nextRoundCountdown, setNextRoundCountdown] = useState(null);
+  const [isSpectating, setIsSpectating] = useState(false);
+  const [isResult, setIsResult] = useState(false);
   const [startLoading, setStartLoading] = useState(false);
   const [gameMode, setGameMode] = useState('multi'); // Go directly to multiplayer
   
@@ -93,6 +96,7 @@ function BlackjackGame() {
       socket.on('roomJoined', code => {
         setJoinedRoom(code);
         setRoomError('');
+        setIsSpectating(false); // Reset spectator mode when joining a room
       });
       socket.on('roomError', msg => {
         setRoomError(msg);
@@ -315,7 +319,7 @@ function BlackjackGame() {
     }
   }, [status])
 
-  // Auto-bet timeout effect
+  // Auto-bet timeout effect - only start when betting phase begins
   useEffect(() => {
     if (!multiGameState || multiGameState.phase !== 'betting') {
       // Clear timeout when not in betting phase
@@ -329,13 +333,13 @@ function BlackjackGame() {
     }
 
     const myPlayer = multiGameState.players.find(p => p.id === socketId);
-    if (!myPlayer || myPlayer.hasPlacedBet) {
-      setAutoBetCountdown(0);
+    if (!myPlayer || myPlayer.hasPlacedBet || autoBetTimeout) {
+      // Don't restart if already running or bet already placed
       return;
     }
 
-    // Start countdown from 10 seconds
-    setAutoBetCountdown(10);
+    // Start countdown from 15 seconds (matching BETTING_TIME_SECONDS)
+    setAutoBetCountdown(15);
     
     // Update countdown every second
     const countdownInterval = setInterval(() => {
@@ -345,7 +349,7 @@ function BlackjackGame() {
       });
     }, 1000);
 
-    // Set auto-bet timeout for 10 seconds
+    // Set auto-bet timeout for 15 seconds
     const timeout = setTimeout(() => {
       console.log('Auto-betting due to timeout');
       setIsPlacingBet(true);
@@ -360,7 +364,7 @@ function BlackjackGame() {
       });
       
       setAutoBetCountdown(0);
-    }, 10000);
+    }, 15000);
 
     setAutoBetTimeout(timeout);
 
@@ -371,7 +375,20 @@ function BlackjackGame() {
       setAutoBetTimeout(null);
       setAutoBetCountdown(0);
     };
-  }, [multiGameState?.phase, socketId, joinedRoom, multiGameState?.players, pendingBet]);
+  }, [multiGameState?.phase, socketId, joinedRoom]); // Removed multiGameState?.players and pendingBet to prevent restart
+
+  // Separate effect to handle bet placement status
+  useEffect(() => {
+    if (!multiGameState) return;
+    
+    const myPlayer = multiGameState.players.find(p => p.id === socketId);
+    if (myPlayer && myPlayer.hasPlacedBet && autoBetTimeout) {
+      // Clear auto-bet when bet is placed
+      clearTimeout(autoBetTimeout);
+      setAutoBetTimeout(null);
+      setAutoBetCountdown(0);
+    }
+  }, [multiGameState?.players, socketId, autoBetTimeout]);
 
   // Reset pending bet when bet is placed
   useEffect(() => {
@@ -383,6 +400,43 @@ function BlackjackGame() {
       setIsPlacingBet(false);
     }
   }, [multiGameState?.players, socketId]);
+
+  // Next Round auto-advance countdown
+  useEffect(() => {
+    if (isResult && isCreator && nextRoundCountdown === null) {
+      setNextRoundCountdown(12.5);
+    }
+    
+    if (nextRoundCountdown !== null && nextRoundCountdown > 0) {
+      const timer = setTimeout(() => {
+        setNextRoundCountdown(nextRoundCountdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (nextRoundCountdown === 0) {
+      // Auto-advance to next round
+      socket.emit('restartGameInRoom', joinedRoom);
+      setStatus('multi-started');
+      setMultiGameState(null);
+      setNextRoundCountdown(null);
+    }
+  }, [isResult, isCreator, nextRoundCountdown, joinedRoom]);
+
+  // Update isResult based on game state
+  useEffect(() => {
+    if (multiGameState) {
+      const newIsResult = multiGameState.phase === 'result';
+      setIsResult(newIsResult);
+    } else {
+      setIsResult(false);
+    }
+  }, [multiGameState]);
+
+  // Reset countdown when round ends
+  useEffect(() => {
+    if (!isResult) {
+      setNextRoundCountdown(null);
+    }
+  }, [isResult]);
 
   // Card rendering helper
   const renderCard = (card, idx, isDealer = false) => (
@@ -538,7 +592,6 @@ function BlackjackGame() {
         if (multiGameState) {
           const gs = multiGameState;
           const isMyTurn = gs.phase === 'playing' && gs.players[gs.turn]?.id === socketId;
-          const isResult = gs.phase === 'result';
           const myPlayer = gs.players.find(p => p.id === socketId);
 
           const casinoPlayers = gs.players.map((p, idx) => ({
@@ -581,33 +634,66 @@ function BlackjackGame() {
 
                 <div className="casino-controls">
                   <div className="control-buttons">
-                    <HelpButton 
+                    {/* Help Button - Temporarily disabled */}
+                    {/* <HelpButton 
                       onOpen={() => setIsHelpChatOpen(true)}
                       disabled={false}
-                    />
+                    /> */}
 
                     {isResult && isCreator && (
-                      <button className="control-btn next-btn" onClick={() => {
-                        socket.emit('restartGameInRoom', joinedRoom);
-                        setStatus('multi-started');
-                        setMultiGameState(null);
-                      }}>
-                        Next Round
+                      <button 
+                        className={`control-btn next-btn ${nextRoundCountdown !== null ? 'pulsing' : ''}`}
+                        onClick={() => {
+                          socket.emit('restartGameInRoom', joinedRoom);
+                          setStatus('multi-started');
+                          setMultiGameState(null);
+                          setNextRoundCountdown(null);
+                        }}
+                      >
+                        {nextRoundCountdown !== null ? 
+                          `Next Round (${nextRoundCountdown}s)` : 
+                          'Next Round'
+                        }
                       </button>
                     )}
 
-                    <button className="control-btn leave-btn" onClick={() => {
-                      setJoinedRoom(null);
-                      setRoomCode('');
-                      setRoomInput('');
-                      setRoomError('');
-                      setPlayers([]);
-                      setStatus('');
-                      setMultiGameState(null);
-                      socket.emit('leaveRoom', joinedRoom);
-                    }}>
-                      Leave
-                    </button>
+                    {/* Show spectate option for players without chips in multiplayer */}
+                    {myPlayer && myPlayer.balance <= 0 && players.length > 1 && !isSpectating ? (
+                      <div className="no-chips-options">
+                        <button 
+                          className="control-btn spectate-btn" 
+                          onClick={() => setIsSpectating(true)}
+                        >
+                          Spectate
+                        </button>
+                        <button className="control-btn leave-btn" onClick={() => {
+                          setJoinedRoom(null);
+                          setRoomCode('');
+                          setRoomInput('');
+                          setRoomError('');
+                          setPlayers([]);
+                          setStatus('');
+                          setMultiGameState(null);
+                          socket.emit('leaveRoom', joinedRoom);
+                        }}>
+                          Leave
+                        </button>
+                      </div>
+                    ) : (
+                      <button className="control-btn leave-btn" onClick={() => {
+                        setJoinedRoom(null);
+                        setRoomCode('');
+                        setRoomInput('');
+                        setRoomError('');
+                        setPlayers([]);
+                        setStatus('');
+                        setMultiGameState(null);
+                        setIsSpectating(false);
+                        socket.emit('leaveRoom', joinedRoom);
+                      }}>
+                        Leave
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -620,15 +706,9 @@ function BlackjackGame() {
               />
 
               <div className="casino-footer">
-                {/* Debug info */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div style={{ color: 'yellow', fontSize: '0.8rem', marginBottom: '0.5rem' }}>
-                    Debug: Phase={gs.phase}, MyPlayer={myPlayer ? 'exists' : 'null'}, HasBet={myPlayer?.hasPlacedBet}
-                  </div>
-                )}
                 
                 {/* Betting Panel during betting phase */}
-                {gs.phase === 'betting' && myPlayer && (
+                {gs.phase === 'betting' && myPlayer && !isSpectating && myPlayer.balance > 0 && (
                   <div className="betting-section">
                     <BettingPanel
                       balance={myPlayer.balance || 0}
@@ -656,49 +736,56 @@ function BlackjackGame() {
                       </div>
                     )}
                     
-                    {!myPlayer.hasPlacedBet && autoBetCountdown > 0 && (
-                      <div className="auto-bet-countdown" style={{
-                        color: autoBetCountdown <= 3 ? '#ff4444' : '#ffa500',
-                        textAlign: 'center',
-                        marginTop: '0.5rem',
-                        fontSize: '0.9rem',
-                        fontWeight: 'bold',
-                        padding: '0.5rem',
-                        backgroundColor: 'rgba(0,0,0,0.3)',
-                        borderRadius: '4px',
-                        border: `2px solid ${autoBetCountdown <= 3 ? '#ff4444' : '#ffa500'}`
-                      }}>
-                        {autoBetCountdown <= 3 ? 
-                          `Auto-betting ${pendingBet > 0 ? pendingBet : 25} chips in ${Math.ceil(autoBetCountdown)}s` : 
-                          `Auto-bet in ${Math.ceil(autoBetCountdown)}s (${pendingBet > 0 ? pendingBet : 25} chips)`
-                        }
-                      </div>
-                    )}
+
                     
-                    {!myPlayer.hasPlacedBet && autoBetCountdown === 0 && bettingTimeLeft > 0 && (
-                      <div className="betting-instructions" style={{
-                        color: '#00ff88',
-                        textAlign: 'center',
-                        marginTop: '0.5rem',
-                        fontSize: '0.8rem',
-                        fontStyle: 'italic'
-                      }}>
-                        Select chips and click "Place Bet"
-                      </div>
-                    )}
+
                   </div>
                 )}
 
-                {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && (
-                  <div className="action-buttons">
+                {/* Spectator message */}
+                {isSpectating && (
+                  <div className="spectator-message" style={{
+                    color: '#ffb74d',
+                    textAlign: 'center',
+                    padding: '1rem',
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    backgroundColor: 'rgba(255, 183, 77, 0.1)',
+                    borderRadius: '8px',
+                    border: '2px solid #ffb74d',
+                    margin: '1rem 0'
+                  }}>
+                    👁️ Spectating Mode - You're watching the game
+                  </div>
+                )}
+
+                {/* No chips message */}
+                {myPlayer && myPlayer.balance <= 0 && !isSpectating && players.length > 1 && (
+                  <div className="no-chips-message" style={{
+                    color: '#e57373',
+                    textAlign: 'center',
+                    padding: '1rem',
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    backgroundColor: 'rgba(229, 115, 115, 0.1)',
+                    borderRadius: '8px',
+                    border: '2px solid #e57373',
+                    margin: '1rem 0'
+                  }}>
+                    💸 Out of chips! Choose to spectate or leave the game.
+                  </div>
+                )}
+
+                {gs.phase === 'playing' && isMyTurn && !myPlayer?.isBust && !myPlayer?.isStand && !isSpectating && (
+                  <div className="mobile-action-buttons">
                     <button
-                      className="action-btn hit-btn"
+                      className="mobile-action-btn mobile-hit-btn"
                       onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'hit' })}
                     >
                       Hit
                     </button>
                     <button
-                      className="action-btn stand-btn"
+                      className="mobile-action-btn mobile-stand-btn"
                       onClick={() => socket.emit('playerAction', { code: joinedRoom, action: 'stand' })}
                     >
                       Stand
@@ -737,12 +824,12 @@ function BlackjackGame() {
                 )}
               </div>
 
-              {/* Help Chat */}
-              <HelpChat
+              {/* Help Chat - Temporarily disabled */}
+              {/* <HelpChat
                 isOpen={isHelpChatOpen}
                 onClose={() => setIsHelpChatOpen(false)}
                 roomCode={joinedRoom}
-              />
+              /> */}
             </div>
           );
         } else {

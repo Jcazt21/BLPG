@@ -1,4 +1,4 @@
-/* Player Position - Compact Horizontal Design */
+/* Player Position - Optimized for horizontal card layout */
 .player-position {
   display: flex;
   flex-direction: column;
@@ -9,9 +9,10 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
   position: relative;
-  min-width: 100px;
-  max-width: 140px;
-  min-height: 140px; /* Increased to accommodate betting info */
+  min-width: 120px; /* Increased for horizontal cards */
+  max-width: 180px; /* Increased for horizontal cards */
+  min-height: 140px;
+  overflow: visible; /* Allow cards to extend beyond container */
 }
 
 .player-position.current-turn {
@@ -153,14 +154,16 @@
   box-shadow: 0 4px 8px rgba(255, 213, 79, 0.2);
 }
 
-/* Player Cards */
+/* Player Cards - Optimized for horizontal CardStack */
 .player-cards {
   display: flex;
-  gap: 0.25rem;
+  justify-content: flex-start;
+  align-items: flex-start;
   margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  min-height: 3rem;
+  width: 100%;
+  overflow: visible;
+  /* Let CardStack manage its own width with horizontal --reserve */
+  min-height: 3.5rem;
 }
 
 /* Hand Total */
@@ -245,12 +248,12 @@
   border-color: #ffd54f;
 }
 
-/* Responsive Design */
+/* Responsive Design - Horizontal card layout */
 @media (max-width: 768px) {
   .player-position {
     padding: 0.75rem;
-    min-width: 100px;
-    max-width: 140px;
+    min-width: 110px;
+    max-width: 160px;
   }
   
   .player-name {
@@ -297,8 +300,8 @@
 @media (max-width: 480px) {
   .player-position {
     padding: 0.5rem;
-    min-width: 80px;
-    max-width: 120px;
+    min-width: 100px;
+    max-width: 140px;
   }
   
   .player-name {

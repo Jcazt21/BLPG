@@ -1,4 +1,5 @@
 import { PromptGuardrailsConfig, AssistantResponseSchema, GuardedFallback } from '../../types/assistantTypes';
+import { DEALER_DOMINICANO, DEALER_SYSTEM_PROMPTS, DEALER_MODEL_CONFIG } from '../../config/dealerPersonaConfig';
 
 /**
  * PromptGuardrails manages system prompts, restrictions, and fallback responses
@@ -10,22 +11,7 @@ export class PromptGuardrails {
 
   constructor(config?: Partial<PromptGuardrailsConfig>) {
     this.config = {
-      systemPrompt: `
-Eres un asistente especializado en blackjack. Tu único propósito es ayudar a los jugadores a entender las reglas y mecánicas básicas del blackjack.
-
-RESTRICCIONES ESTRICTAS:
-1. SOLO responde preguntas sobre blackjack
-2. NO des consejos específicos sobre manos actuales
-3. NO reveles información sobre cartas ocultas
-4. NO discutas apuestas con dinero real
-5. NO proporciones estrategias de conteo de cartas
-6. Mantén respuestas bajo 300 caracteres
-7. Usa tono profesional y amigable
-8. Responde en español neutro
-
-FORMATO DE RESPUESTA:
-Debes responder SIEMPRE en formato JSON válido según el schema proporcionado.
-`,
+      systemPrompt: DEALER_SYSTEM_PROMPTS.base,
       
       responseFormat: `
 Responde ÚNICAMENTE en este formato JSON:
@@ -54,7 +40,7 @@ Responde ÚNICAMENTE en este formato JSON:
         {
           input: "¿Cuánto vale un As?",
           output: {
-            content: "El As vale 1 u 11 puntos, lo que sea más conveniente para tu mano sin pasarte de 21.",
+            content: "¡Eeeeh, mi hermano! El As vale 1 u 11 punto', lo que te convenga má' sin pasarte de 21.",
             category: "rules",
             confidence: 1.0,
             isBlackjackRelated: true,
@@ -67,7 +53,7 @@ Responde ÚNICAMENTE en este formato JSON:
         {
           input: "¿Qué hago con mi mano?",
           output: {
-            content: "No puedo aconsejarte sobre tu mano específica, pero puedo explicarte las opciones: pedir, plantarse, doblar o dividir.",
+            content: "¡Tranquilo, tigre! No te doy consejo específico, pero puedo explicarte las opcione': pedir, plantarse, doblar o dividir.",
             category: "redirect",
             confidence: 0.9,
             isBlackjackRelated: true,
@@ -82,22 +68,277 @@ Responde ÚNICAMENTE en este formato JSON:
     };
 
     this.fallbacks = [
+      // SALUDOS Y PRESENTACIÓN
       {
-        trigger: /reglas|rules|cómo se juega|como se juega/i,
+        trigger: /hola|saludos|buenas|que tal/i,
         response: {
-          content: "El blackjack busca llegar a 21 sin pasarse. Cartas 2-10 valen su número, figuras valen 10, As vale 1 u 11.",
-          category: "rules",
+          content: "Klk pana, tamo ready pa' echalno un blackjack bacano, qué lo qué?",
+          category: "redirect",
           confidence: 1.0,
           isBlackjackRelated: true,
           containsAdvice: false,
-          metadata: { rulesReferenced: ["objetivo", "valores-cartas"] }
+          metadata: { redirectReason: "greeting" }
         },
         priority: 1
       },
       {
-        trigger: /qué hago|qué debo|consejo|que hago|que debo/i,
+        trigger: /klk|que lo que|qué lo que/i,
         response: {
-          content: "No doy consejos específicos, pero puedo explicarte las opciones: pedir carta, plantarse, doblar o dividir.",
+          content: "¡Klk, qué lo qué, tiguere! Soy Javi, tu dealer del Malecón. ¿Listo pa' aprender blackjack o qué?",
+          category: "redirect",
+          confidence: 1.0,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { redirectReason: "greeting" }
+        },
+        priority: 1
+      },
+      
+      // REGLAS BÁSICAS
+      {
+        trigger: /objetivo|como ganar|como se gana|meta/i,
+        response: {
+          content: "Socio, el objetivo e' sacal 21 o acercarte má que la casa sin pasarte, ¡tá fácil!",
+          category: "rules",
+          confidence: 1.0,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["objetivo"] }
+        },
+        priority: 1
+      },
+      {
+        trigger: /reglas|como se juega|juego/i,
+        response: {
+          content: "Pana, el blackjack e' sacá 21 o menos, ganale a la casa sin pasarte, ¿okey?",
+          category: "rules",
+          confidence: 1.0,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["basic_rules"] }
+        },
+        priority: 1
+      },
+      {
+        trigger: /valores|cuanto vale|valor de carta/i,
+        response: {
+          content: "La carta del 2 al 10 valen lo mismo, J, Q, K valen 10, y el As 1 u 11, ¡tá claro!",
+          category: "rules",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["card_values"] }
+        },
+        priority: 2
+      },
+      {
+        trigger: /blackjack|21/i,
+        response: {
+          content: "Diablo, un blackjack e' un As con 10, J, Q o K, ¡te pagamo 3 a 2, tiguere!",
+          category: "rules",
+          confidence: 1.0,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["blackjack"] }
+        },
+        priority: 1
+      },
+      
+      // MECÁNICAS DEL JUEGO
+      {
+        trigger: /doblar|double/i,
+        response: {
+          content: "Doblá la apuesta si tá confiado, pero solo te damo una carta má, ¡cuidáo!",
+          category: "mechanics",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["double_down"] }
+        },
+        priority: 2
+      },
+      {
+        trigger: /dividir|split/i,
+        response: {
+          content: "Si tené do' carta iguale, dividí y jugá do' mano, pero ponle otra apuesta, ¡wao!",
+          category: "mechanics",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["split"] }
+        },
+        priority: 2
+      },
+      {
+        trigger: /plantarse|stand|me planto/i,
+        response: {
+          content: "Tá bueno, te plantá y la casa juega, a vel si le gana al tiguere, ¡suerte!",
+          category: "mechanics",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["stand"] }
+        },
+        priority: 2
+      },
+      {
+        trigger: /pedir carta|hit|otra carta|pedir/i,
+        response: {
+          content: "Pana, pedí otra carta, pero ojo, si te pasa de 21, te jodite, ¡jeje!",
+          category: "mechanics",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["hit"] }
+        },
+        priority: 2
+      },
+      
+      // SOBRE EL DEALER
+      {
+        trigger: /dealer|casa|crupier/i,
+        response: {
+          content: "La casa juega última y se planta en 17 o má, ¡a vel si me gana, socio!",
+          category: "rules",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["dealer_rules"] }
+        },
+        priority: 2
+      },
+      
+      // APUESTAS
+      {
+        trigger: /apuesta|apostar|dinero/i,
+        response: {
+          content: "Echá tu apuesta, tiguere, y jugamo, pa' detalle chequea las regla del casino, ¡klk!",
+          category: "betting",
+          confidence: 0.8,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { redirectReason: "betting_rules" }
+        },
+        priority: 3
+      },
+      
+      // ESTRATEGIA
+      {
+        trigger: /estrategia|como mejorar|consejo/i,
+        response: {
+          content: "Pana, aprendé las jugada básica, pero no te damo consejito específico, ¡tú sabe!",
+          category: "strategy",
+          confidence: 0.8,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { strategyConcepts: ["basic_strategy"] }
+        },
+        priority: 3
+      },
+      {
+        trigger: /ganar|perder|como gano/i,
+        response: {
+          content: "Pa' ganá, saca má que la casa sin pasarte de 21, si no, te quedaste, ¡diablo!",
+          category: "rules",
+          confidence: 1.0,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["win_conditions"] }
+        },
+        priority: 1
+      },
+      
+      // INTERACCIONES VARIAS
+      {
+        trigger: /suerte|buena suerte/i,
+        response: {
+          content: "Wao, gracias socio, pero en eto la suerte e' solo una parte, ¡a jugal bacano!",
+          category: "redirect",
+          confidence: 0.8,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { redirectReason: "greeting" }
+        },
+        priority: 3
+      },
+      {
+        trigger: /gracias|thank you/i,
+        response: {
+          content: "De ná, tiguere, tamo pa' ayudarte a rompela en el blackjack, ¡chévere!",
+          category: "redirect",
+          confidence: 0.8,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { redirectReason: "acknowledgment" }
+        },
+        priority: 3
+      },
+      {
+        trigger: /seguro|insurance/i,
+        response: {
+          content: "Si la casa muestra un As, podé apostá un seguro, pero cuidado, ¡e' opcional!",
+          category: "mechanics",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["insurance"] }
+        },
+        priority: 2
+      },
+      {
+        trigger: /rendirse|surrender|me rindo|rindo/i,
+        response: {
+          content: "Si tá feo, podé rendirte y salvá la mitad de la apuesta, ¡pero no te acobarde, jeje!",
+          category: "mechanics",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["surrender"] }
+        },
+        priority: 2
+      },
+      {
+        trigger: /empate|tie|push/i,
+        response: {
+          content: "Si empatamo, nadie gana ni pierde, te devolvemo la apuesta, ¡tá bien!",
+          category: "rules",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["push"] }
+        },
+        priority: 2
+      },
+      {
+        trigger: /carta boca abajo|hole card/i,
+        response: {
+          content: "La casa tiene una carta boca abajo, se revela al final, ¡a vel si te pongo en apuro!",
+          category: "rules",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["hole_card"] }
+        },
+        priority: 2
+      },
+      {
+        trigger: /bust|pasarse|me pase|pase de 21/i,
+        response: {
+          content: "Coño, si te pasa de 21, te bustea y pierde, ¡cuidáo con pedí mucha carta!",
+          category: "rules",
+          confidence: 0.9,
+          isBlackjackRelated: true,
+          containsAdvice: false,
+          metadata: { rulesReferenced: ["bust"] }
+        },
+        priority: 2
+      },
+      
+      // CONSEJOS ESPECÍFICOS - REDIRECT
+      {
+        trigger: /qué hago|qué debo|que hago|que debo/i,
+        response: {
+          content: "¡Tranquilo, tigre! No te doy consejo específico, pero puedo explicarte las opcione: pedir, plantarse, doblar o dividir.",
           category: "redirect",
           confidence: 0.9,
           isBlackjackRelated: true,
@@ -105,42 +346,6 @@ Responde ÚNICAMENTE en este formato JSON:
           metadata: { redirectReason: "no-specific-advice" }
         },
         priority: 2
-      },
-      {
-        trigger: /valores|valor|cartas/i,
-        response: {
-          content: "Cartas 2-10 valen su número, J/Q/K valen 10, As vale 1 u 11 según convenga.",
-          category: "rules",
-          confidence: 1.0,
-          isBlackjackRelated: true,
-          containsAdvice: false,
-          metadata: { rulesReferenced: ["valores-cartas"] }
-        },
-        priority: 1
-      },
-      {
-        trigger: /doblar|double|down/i,
-        response: {
-          content: "Doblar significa duplicar tu apuesta y recibir exactamente una carta más, luego te plantas automáticamente.",
-          category: "mechanics",
-          confidence: 1.0,
-          isBlackjackRelated: true,
-          containsAdvice: false,
-          metadata: { rulesReferenced: ["doblar"] }
-        },
-        priority: 1
-      },
-      {
-        trigger: /dividir|split|separar/i,
-        response: {
-          content: "Puedes dividir cuando tienes dos cartas iguales, creando dos manos separadas con apuestas independientes.",
-          category: "mechanics",
-          confidence: 1.0,
-          isBlackjackRelated: true,
-          containsAdvice: false,
-          metadata: { rulesReferenced: ["dividir"] }
-        },
-        priority: 1
       }
     ];
   }
@@ -210,7 +415,7 @@ RESPUESTA (JSON únicamente):`;
    */
   getGenericFallback(): AssistantResponseSchema {
     return {
-      content: "Soy un asistente de blackjack. Puedo ayudarte con reglas, valores de cartas, y mecánicas básicas del juego.",
+      content: "¡Klk, mi pana! Soy Javi, tu dealer del Malecón. Puedo ayudarte con las regla', valore' de carta', y mecánica' del blackjack.",
       category: "redirect",
       confidence: 0.8,
       isBlackjackRelated: true,

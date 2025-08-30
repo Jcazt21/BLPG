@@ -14,12 +14,12 @@
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up",
     "docker:down": "docker-compose down",
-    "test": "node run-tests.js all",
-    "test:unit": "node run-tests.js unit",
+    "test": "node scripts/run-tests.js all",
+    "test:unit": "node scripts/run-tests.js unit",
     "test:integration": "node tests/integration/quick.js",
-    "test:e2e": "node run-tests.js comprehensive",
-    "test:performance": "node run-tests.js performance",
-    "test:balance": "node run-tests.js balance"
+    "test:e2e": "node scripts/run-tests.js comprehensive",
+    "test:performance": "node scripts/run-tests.js performance",
+    "test:balance": "node scripts/run-tests.js balance"
   },
   "dependencies": {
     "dotenv": "^17.0.1",

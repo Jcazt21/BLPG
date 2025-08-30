@@ -4,6 +4,7 @@ import { ResponseValidator } from './responseValidator';
 import { PromptGuardrails } from './promptGuardrails';
 import { ContentGuardrails } from './contentGuardrails';
 import { helpAssistantConfig } from '../../config/helpAssistantConfig';
+import { ConfigManager } from '../../config/environment';
 import { helpLogger } from '../../utils/helpLogger';
 import { helpMonitoring } from '../../utils/helpMonitoring';
 
@@ -70,6 +71,7 @@ export class HelpAssistantService {
   private initializeLLMProvider(): void {
     try {
       const config = helpAssistantConfig.getConfig();
+      const envConfig = ConfigManager.get();
       
       if (!config.enabled) {
         helpLogger.info('Help Assistant is disabled in configuration');
@@ -78,8 +80,10 @@ export class HelpAssistantService {
       }
 
       const providerConfig = helpAssistantConfig.getLLMProviderConfig();
-      if (!providerConfig) {
-        throw new Error('No valid LLM provider configuration found');
+      if (!providerConfig.apiKey && !envConfig.GEMINI_API_KEY) {
+        helpLogger.warn('No Gemini API key found, using mock provider');
+        this.llmProvider = LLMProviderFactory.create('mock', '', 'mock-model');
+        return;
       }
 
       const llmOptions: LLMOptions = {
@@ -96,7 +100,7 @@ export class HelpAssistantService {
 
       this.llmProvider = LLMProviderFactory.create(
         config.provider,
-        providerConfig.apiKey,
+        envConfig.GEMINI_API_KEY || providerConfig.apiKey,
         providerConfig.model,
         llmOptions,
         rateLimitConfig

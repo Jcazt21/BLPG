@@ -53,7 +53,7 @@ function runTest(testFile) {
     
     const child = spawn('node', [testFile], {
       stdio: 'inherit',
-      cwd: __dirname
+      cwd: path.join(__dirname, '..')
     });
 
     child.on('close', (code) => {

@@ -84,7 +84,7 @@ let bettingPhaseManager: BettingPhaseManager;
 const autoAdvanceTimers = new Map<string, NodeJS.Timeout>();
 
 // Constants for auto-advance
-const AUTO_ADVANCE_DELAY_MS = 7500; // 7.5 seconds
+const AUTO_ADVANCE_DELAY_MS = 12500; // 12.5 seconds (updated from 7.5s)
 
 // Helper: create a new shuffled deck
 function createShuffledDeck(): Card[] {
@@ -157,7 +157,7 @@ function scheduleAutoAdvance(roomCode: string) {
   // Emit countdown to clients so they know auto-advance is coming
   io.to(roomCode).emit('autoAdvanceScheduled', {
     delayMs: AUTO_ADVANCE_DELAY_MS,
-    message: 'Next round will start automatically in 7.5 seconds'
+    message: 'Next round will start automatically in 12.5 seconds'
   });
 }
 

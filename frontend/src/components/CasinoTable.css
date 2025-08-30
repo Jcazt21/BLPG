@@ -7,6 +7,7 @@
   background: #232b23;
   padding: 0.5rem;
   box-sizing: border-box;
+  overflow: visible; /* Permitir que elementos posicionados absolutamente se vean */
 }
 
 /* Dealer Area - Top of screen */
@@ -19,14 +20,39 @@
   border-radius: 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 0.5rem;
+  position: relative; /* Para posicionar la imagen de Javi */
+  overflow: visible; /* Permitir que la imagen se vea fuera del contenedor */
+}
+
+.dealer-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .dealer-label {
   color: #e0e0e0;
   font-size: 1.2rem;
   font-weight: bold;
-  margin-bottom: 0.5rem;
   letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.dealer-avatar-small {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.dealer-avatar-small:hover {
+  transform: scale(1.1);
+  border-color: rgba(255, 213, 79, 0.6);
 }
 
 .dealer-cards {
@@ -264,9 +290,7 @@
     padding: 0.75rem;
   }
   
-  .dealer-label {
-    font-size: 1rem;
-  }
+
   
   .table-surface {
     padding: 1rem;
@@ -285,5 +309,82 @@
   
   .table-surface {
     padding: 0.75rem;
+  }
+  
+
+}
+
+/* Imagen de Javi alineada con el área del dealer */
+.javi-dealer-image {
+  position: absolute;
+  right: 15px; /* Dentro del contenedor, alineada a la derecha */
+  top: 50%; /* Centrada verticalmente */
+  transform: translateY(-50%); /* Centrar verticalmente */
+  width: min(20vw, 140px); /* Mucho más grande para aprovechar el espacio */
+  height: min(20vw, 140px);
+  background-image: url("/javiCasino.jpeg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover; /* Cambiar a cover para llenar mejor el círculo */
+  opacity: 0.9;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 213, 79, 0.6); /* Borde más grueso y visible */
+}
+
+.javi-dealer-image:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.05); /* Mantener el centrado vertical en hover */
+}
+
+/* Responsive para la imagen del dealer */
+@media (max-width: 1024px) {
+  .javi-dealer-image {
+    right: 12px;
+    width: min(18vw, 120px);
+    height: min(18vw, 120px);
+  }
+}
+
+@media (max-width: 768px) {
+  .javi-dealer-image {
+    right: 10px;
+    width: min(16vw, 100px);
+    height: min(16vw, 100px);
+    opacity: 0.8;
+  }
+  
+  .javi-dealer-image:hover {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .javi-dealer-image {
+    right: 8px;
+    width: 80px;
+    height: 80px;
+    opacity: 0.7;
+  }
+  
+  .javi-dealer-image:hover {
+    opacity: 0.9;
+  }
+}
+
+/* Landscape orientation - imagen más pequeña */
+@media (max-width: 900px) and (orientation: landscape) {
+  .javi-dealer-image {
+    right: 6px;
+    width: 70px;
+    height: 70px;
+    opacity: 0.7;
+  }
+  
+  .javi-dealer-image:hover {
+    opacity: 0.9;
   }
 }

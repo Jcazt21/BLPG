@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import PlayerPosition from './PlayerPosition';
 import PlayingCard from '../PlayingCard';
+import CardStack from './CardStack';
 import VictoryLeaderboard from './VictoryLeaderboard';
 import './CasinoTable.css';
 
@@ -14,15 +15,15 @@ const CasinoTable = React.memo(function CasinoTable({ players = [], dealer = nul
   const dealerCards = useMemo(() => {
     if (!dealer?.hand || dealer.hand.length === 0) return null;
     
-    return dealer.hand.map((card, idx) => (
-      <PlayingCard
-        key={`dealer-${card.value}-${card.suit}-${idx}`}
-        value={card.value}
-        suit={card.suit}
-        faceDown={false}
-        flipped={true}
+    return (
+      <CardStack 
+        cards={dealer.hand} 
+        maxVisible={5}
+        compactOffset={20}
+        expandedOffset={40}
+        animationDuration={200}
       />
-    ));
+    );
   }, [dealer?.hand]);
 
   // Memoize game phase text to prevent unnecessary recalculations
@@ -55,21 +56,25 @@ const CasinoTable = React.memo(function CasinoTable({ players = [], dealer = nul
 
   return (
     <div className="casino-table">
-      {/* Victory Leaderboard */}
+      {/* Victory Leaderboard - Hide during active gameplay */}
       <VictoryLeaderboard 
         players={activePlayers} 
-        isVisible={showLeaderboard && activePlayers.length > 1}
+        isVisible={showLeaderboard && activePlayers.length > 1 && (gamePhase === 'waiting' || gamePhase === 'result')}
       />
 
       {/* Dealer area at the top */}
       <div className="dealer-area">
-        <div className="dealer-label">Dealer</div>
+        <div className="dealer-header">
+          <div className="dealer-label">Javi</div>
+        </div>
         <div className="dealer-cards">
           {dealerCards}
         </div>
         {dealer?.total !== undefined && (
           <div className="dealer-total">Total: {dealer.total}</div>
         )}
+        {/* Imagen de Javi alineada con el área del dealer */}
+        <div className="javi-dealer-image"></div>
       </div>
 
       {/* Table surface */}
